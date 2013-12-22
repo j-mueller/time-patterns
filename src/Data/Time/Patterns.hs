@@ -21,6 +21,7 @@ module Data.Time.Patterns(
     weekly,
     yearly,
     -- * Combinators
+    count,
     every
     ) where
 
@@ -32,8 +33,6 @@ import Data.Time.Calendar (
     fromGregorian,
     isLeapYear,
     toGregorian)
-import Data.Time.Calendar.WeekDate (
-    toWeekDate)
 
 -- | A pattern describing re-occuring events. 
 newtype DatePattern = DatePattern { nOcc :: Day -> Maybe (Day, DatePattern) }
@@ -45,7 +44,7 @@ nextOccurrence DatePattern{..} d = nOcc d >>= return . fst
 
 -- | A list of occurrences of the pattern after a start daye.
 occurrences :: DatePattern -> Day -> [Day]
-occurrences d@DatePattern{..} startDate = theList where
+occurrences DatePattern{..} startDate = theList where
     theList = case (nOcc startDate) of
         Nothing -> []
         Just (a, dp') -> a : occurrences dp' a
@@ -86,3 +85,14 @@ every n DatePattern{..}
         nextOcc 0 d = nOcc d
         nextOcc 1 d = nOcc d
         nextOcc n' d = nOcc d >>= nextOcc (n'-1) . fst
+
+-- | Stop after a number of occurrences.
+count :: Int -> DatePattern -> DatePattern
+count n p@DatePattern{..}
+  | n < 1 = never
+  | otherwise = DatePattern $ \d -> 
+        let nd = nOcc d >>= return . fst in
+        let dp = count (n - 1) p in
+        nd >>= \d' -> return (d', dp)
+        
+        
