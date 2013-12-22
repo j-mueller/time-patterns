@@ -25,55 +25,57 @@ module Data.Time.Patterns(
     ) where
 
 import Data.Time.Calendar (
-  Day, 
-  addDays, 
-  addGregorianMonthsClip,
-  addGregorianYearsClip,
-  fromGregorian,
-  isLeapYear,
-  toGregorian)
+    Day, 
+    addDays, 
+    addGregorianMonthsClip,
+    addGregorianYearsClip,
+    fromGregorian,
+    isLeapYear,
+    toGregorian)
+import Data.Time.Calendar.WeekDate (
+    toWeekDate)
 
 -- | A pattern describing re-occuring events. 
-newtype DatePattern = DatePattern { nOcc :: Day -> Maybe Day }
+newtype DatePattern = DatePattern { nOcc :: Day -> Maybe (Day, DatePattern) }
 
 -- | The next occurence after a date, or Nothing if no such
 --   value exists.
 nextOccurrence :: DatePattern -> Day -> Maybe Day
-nextOccurrence DatePattern{..} = nOcc
+nextOccurrence DatePattern{..} d = nOcc d >>= return . fst
 
 -- | A list of occurrences of the pattern after a start daye.
 occurrences :: DatePattern -> Day -> [Day]
 occurrences d@DatePattern{..} startDate = theList where
     theList = case (nOcc startDate) of
         Nothing -> []
-        Just a -> a : occurrences d a
+        Just (a, dp') -> a : occurrences dp' a
 
 -- | A weekly event
 weekly :: DatePattern
 weekly = DatePattern{..} where
-  nOcc = Just . addDays 7
+  nOcc d = Just (addDays 7 d, weekly)
 
 -- | A monthly event. 
 monthly :: DatePattern
 monthly = DatePattern{..} where
-  nOcc = Just . addGregorianMonthsClip 1
+  nOcc d = Just (addGregorianMonthsClip 1 d, monthly)
 
 -- | A yearly event.
 yearly :: DatePattern
 yearly = DatePattern{..} where
-  nOcc = Just . addGregorianYearsClip 1
+  nOcc d = Just (addGregorianYearsClip 1 d, yearly)
 
 -- | An event that occurs only in leap years.
 leapYearly :: DatePattern
 leapYearly = DatePattern $ \dt ->
     let (y,month,day) = toGregorian dt in
     let nextLeapYear = head . filter isLeapYear . zipWith (+) [1..] . repeat in
-    Just $ fromGregorian (nextLeapYear y) month day
+    Just (fromGregorian (nextLeapYear y) month day, leapYearly)
 
 -- | A pattern with no occurrences.
 never :: DatePattern
 never = DatePattern $ const $ Nothing
-    
+
 -- | Every n-th occurence of an event. If a negative number is given, 
 --   getOccurence of the result will always return Nothing.
 every :: Int -> DatePattern -> DatePattern
@@ -83,4 +85,4 @@ every n DatePattern{..}
       where
         nextOcc 0 d = nOcc d
         nextOcc 1 d = nOcc d
-        nextOcc n' d = nOcc d >>= nextOcc (n'-1)
+        nextOcc n' d = nOcc d >>= nextOcc (n'-1) . fst
