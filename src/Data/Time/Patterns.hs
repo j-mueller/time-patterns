@@ -25,25 +25,24 @@ module Data.Time.Patterns(
     every
     ) where
 
-import Data.Time.Calendar (
-    Day, 
-    addDays, 
-    addGregorianMonthsClip,
-    addGregorianYearsClip,
-    fromGregorian,
+import Control.Lens
+import Data.Thyme.Calendar (
+    YearMonthDay,
+    gregorianMonthsClip,
+    gregorianYearsClip,
     isLeapYear,
-    toGregorian)
+    _ymdYear)
 
 -- | A pattern describing re-occuring events. 
-newtype DatePattern = DatePattern { nOcc :: Day -> Maybe (Day, DatePattern) }
+newtype DatePattern = DatePattern { nOcc :: YearMonthDay -> Maybe (YearMonthDay, DatePattern) }
 
 -- | The next occurence after a date, or Nothing if no such
 --   value exists.
-nextOccurrence :: DatePattern -> Day -> Maybe Day
+nextOccurrence :: DatePattern -> YearMonthDay -> Maybe YearMonthDay
 nextOccurrence DatePattern{..} d = nOcc d >>= return . fst
 
 -- | A list of occurrences of the pattern after a start daye.
-occurrences :: DatePattern -> Day -> [Day]
+occurrences :: DatePattern -> YearMonthDay -> [YearMonthDay]
 occurrences DatePattern{..} startDate = theList where
     theList = case (nOcc startDate) of
         Nothing -> []
@@ -52,24 +51,23 @@ occurrences DatePattern{..} startDate = theList where
 -- | A weekly event
 weekly :: DatePattern
 weekly = DatePattern{..} where
-  nOcc d = Just (addDays 7 d, weekly)
+  nOcc _ = undefined
 
 -- | A monthly event. 
 monthly :: DatePattern
 monthly = DatePattern{..} where
-  nOcc d = Just (addGregorianMonthsClip 1 d, monthly)
+  nOcc d = Just (gregorianMonthsClip 1 d, monthly)
 
 -- | A yearly event.
 yearly :: DatePattern
 yearly = DatePattern{..} where
-  nOcc d = Just (addGregorianYearsClip 1 d, yearly)
+  nOcc d = Just (gregorianYearsClip 1 d, yearly)
 
 -- | An event that occurs only in leap years.
 leapYearly :: DatePattern
 leapYearly = DatePattern $ \dt ->
-    let (y,month,day) = toGregorian dt in
-    let nextLeapYear = head . filter isLeapYear . zipWith (+) [1..] . repeat in
-    Just (fromGregorian (nextLeapYear y) month day, leapYearly)
+    let nextLeapYear = head . filter (\ty -> isLeapYear (ty^._ymdYear)) . zipWith (gregorianYearsClip) [1..] . repeat in
+    Just (nextLeapYear dt, leapYearly)
 
 -- | A pattern with no occurrences.
 never :: DatePattern

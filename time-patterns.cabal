@@ -27,6 +27,9 @@ source-repository head
 library
   exposed-modules:     Data.Time.Patterns
   build-depends:       base >=4.6 && <4.7,
-                       time == 1.4.*
+                       intervals == 0.4,
+                       lens >= 3.9,
+                       thyme == 0.3.*,
+                       vector-space == 0.8.6
   hs-source-dirs:      src
   default-language:    Haskell2010
