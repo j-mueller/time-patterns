@@ -3,22 +3,29 @@
 
 name:                time-patterns
 version:             0.0.9.0
-synopsis:            A library for describing patterns of re-occurring events, for example bi-weekly, etc.
-description:         This library contains a set of primitives and combinators for event patterns         
+synopsis:            Patterns of re-occurring events    
 license:             BSD3
 license-file:        LICENSE
-author:              Jann Mueller
+author:              Jann Müller
 maintainer:          j.mueller.11@ucl.ac.uk
--- copyright:           
-category:            Data
+copyright:           Copyright (C) 2013 Jann F. Müller
+category:            Data, Time
 build-type:          Simple
--- extra-source-files:  
-cabal-version:       >=1.10
+cabal-version:       >= 1.10
+description:         
+  This package contains a set of primitives and combinators for event patterns. Example:
+  .
+  > >> let biweekly = every 2 weekly
+  > >> let today = fromGregorian 2013 12 01
+  > >> nextOccurrence biweekly today
+  > Just 2013-12-15
+
+source-repository head
+  type: git
+  location: git@bitbucket.org:jfmueller/time-patterns.git
 
 library
-  exposed-modules:     Data.Time.Patterns    
-  -- other-modules:       
-  -- other-extensions:    
+  exposed-modules:     Data.Time.Patterns
   build-depends:       base >=4.6 && <4.7,
                        time == 1.4.*
   hs-source-dirs:      src
