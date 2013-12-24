@@ -77,14 +77,13 @@ leapYearly = DatePattern $ \dt ->
 never :: DatePattern
 never = DatePattern $ const $ Nothing
 
--- | Every n-th occurence of an event. If a negative number is given, 
---   getOccurence of the result will always return Nothing.
+-- | Every n-th occurence of an event. If a number smaller than one
+-- is given, getOccurence of the result will always return Nothing.
 every :: Int -> DatePattern -> DatePattern
 every n DatePattern{..} 
-  | n < 0 = never
+  | n < 1 = never
   | otherwise = DatePattern $ nextOcc n
       where
-        nextOcc 0 d = nOcc d
         nextOcc 1 d = nOcc d
         nextOcc n' d = nOcc d >>= nextOcc (n'-1) . fst
 
@@ -97,7 +96,7 @@ count n p@DatePattern{..}
         let dp = count (n - 1) p in
         nd >>= \d' -> return (d', dp)
 
--- | Occurrences after a date
+-- | Occurrences after a date (including the argument)
 after :: YearMonthDay -> DatePattern -> DatePattern
 after d dp = DatePattern occ'
     where
@@ -105,7 +104,7 @@ after d dp = DatePattern occ'
             | d <= d' = nOcc dp d'
             | otherwise = nOcc dp d
 
--- | Occurrences before a date
+-- | Occurrences before a date (including the argument)
 before :: YearMonthDay -> DatePattern -> DatePattern
 before d dp = DatePattern occ'
     where
