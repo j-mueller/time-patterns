@@ -28,6 +28,7 @@ module Data.Time.Patterns(
 import Control.Lens
 import Data.Thyme.Calendar (
     YearMonthDay,
+    gregorian,
     gregorianMonthsClip,
     gregorianYearsClip,
     isLeapYear,
@@ -51,7 +52,7 @@ occurrences DatePattern{..} startDate = theList where
 -- | A weekly event
 weekly :: DatePattern
 weekly = DatePattern{..} where
-  nOcc _ = undefined
+  nOcc d = Just ((head . drop 7 . enumFrom $ d^.from gregorian)^.gregorian, weekly)
 
 -- | A monthly event. 
 monthly :: DatePattern
@@ -66,7 +67,7 @@ yearly = DatePattern{..} where
 -- | An event that occurs only in leap years.
 leapYearly :: DatePattern
 leapYearly = DatePattern $ \dt ->
-    let nextLeapYear = head . filter (\ty -> isLeapYear (ty^._ymdYear)) . zipWith (gregorianYearsClip) [1..] . repeat in
+    let nextLeapYear = head . filter (\ty -> isLeapYear (ty^._ymdYear)) . zipWith (gregorianYearsClip) (enumFrom 1) . repeat in
     Just (nextLeapYear dt, leapYearly)
 
 -- | A pattern with no occurrences.
