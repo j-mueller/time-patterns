@@ -1,7 +1,8 @@
 To do:
 - add week days 
-- implement "count" combinator: count :: Int -> DatePattern -> DatePattern
 - split up into DayPattern, WeekPattern, YearPattern?
 
 Done:
 - change signature of nextOccurrence to Day -> Maybe (Day, DatePattern)
+- implement "count" combinator: count :: Int -> DatePattern -> DatePattern
+- use package thyme instead of time
