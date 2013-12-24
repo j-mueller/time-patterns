@@ -22,10 +22,13 @@ module Data.Time.Patterns(
     yearly,
     -- * Combinators
     count,
-    every
+    every,
+    after,
+    before
     ) where
 
-import Control.Lens
+import Control.Lens hiding (from, to)
+import qualified Control.Lens as L
 import Data.Thyme.Calendar (
     YearMonthDay,
     gregorian,
@@ -52,7 +55,7 @@ occurrences DatePattern{..} startDate = theList where
 -- | A weekly event
 weekly :: DatePattern
 weekly = DatePattern{..} where
-  nOcc d = Just ((head . drop 7 . enumFrom $ d^.from gregorian)^.gregorian, weekly)
+  nOcc d = Just ((head . drop 7 . enumFrom $ d^.L.from gregorian)^.gregorian, weekly)
 
 -- | A monthly event. 
 monthly :: DatePattern
@@ -93,5 +96,19 @@ count n p@DatePattern{..}
         let nd = nOcc d >>= return . fst in
         let dp = count (n - 1) p in
         nd >>= \d' -> return (d', dp)
-        
-        
+
+-- | Occurrences after a date
+after :: YearMonthDay -> DatePattern -> DatePattern
+after d dp = DatePattern occ'
+    where
+        occ' d'
+            | d <= d' = nOcc dp d'
+            | otherwise = nOcc dp d
+
+-- | Occurrences before a date
+before :: YearMonthDay -> DatePattern -> DatePattern
+before d dp = DatePattern occ'
+    where
+        occ' d'
+            | d >= d' = nOcc dp d'
+            | otherwise = Nothing
