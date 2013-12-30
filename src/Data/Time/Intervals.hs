@@ -1,5 +1,4 @@
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE RankNTypes #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Data.Time.Intervals
@@ -35,7 +34,7 @@ import Data.AdditiveGroup
 import Data.Maybe (listToMaybe)
 import Data.Thyme.Calendar (Day)
 import Data.Thyme.Clock (UTCTime, UTCView(..), _utctDay, utcTime)
-import Prelude hiding (cycle)
+import Prelude hiding (cycle, elem)
 
 -- if the argument to nextOccurrence is part of an interval, then the result should be the interval containing it.
 -- The interval should be closed at the first parameter and open at the second, so that repeated calls of
@@ -71,7 +70,7 @@ mondays :: DatePattern
 mondays = undefined
 
 -- | A sequence with no occurrences
-never :: forall t. IntervalSequence t
+never :: IntervalSequence t
 never = IntervalSequence $ const $ Nothing
 
 -- | Take every nth occurrence
@@ -88,11 +87,13 @@ intersect = undefined
 minus :: Num t => IntervalSequence t -> IntervalSequence t -> IntervalSequence t 
 minus = undefined
 
-cycle :: t -> IntervalSequence t
-cycle = undefined
+-- | Repeat a point infinitely
+cycle :: Interval t -> IntervalSequence t
+cycle i = IntervalSequence $ const $ Just (i, cycle i)
 
-elementOf :: t -> IntervalSequence t -> Bool
-elementOf = undefined
+-- | Check if a point is covered by an interval sequence
+elementOf :: Ord t => t -> IntervalSequence t -> Bool
+elementOf t IntervalSequence{..} = maybe False (\(p,_) -> (elem t p) && (<) t (sup p)) (nextInterval t)
 
 -- | The sequence of occurrences from an initial point.
 occurrencesFrom :: t -> IntervalSequence t -> [Interval t]
