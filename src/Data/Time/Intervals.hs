@@ -117,5 +117,5 @@ dayToUtcTime day = (UTCTime day midnight)^.from utcTime
     where
         midnight = zeroV
 
-elements :: Enum a -> Interval a -> [a]
+elements :: Enum a => Interval a -> [a]
 elements i = enumFromTo (inf i) (pred $ sup i)
