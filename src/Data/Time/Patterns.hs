@@ -16,6 +16,9 @@ module Data.Time.Patterns(
     mondays,
     tuesdays,
     wednesdays,
+    thursdays,
+    fridays,
+    saturdays,
     sundays,
     -- * Operations on date patterns
     never,
@@ -48,6 +51,18 @@ tuesdays = filter (isDayOfWeek 2) days
 -- | Every Wednesday.
 wednesdays :: DatePattern
 wednesdays = filter (isDayOfWeek 3) days
+
+-- | Every Thursday.
+thursdays :: DatePattern
+thursdays = filter (isDayOfWeek 4) days
+
+-- | Every Friday.
+fridays :: DatePattern
+fridays = filter (isDayOfWeek 5) days
+
+-- | Every Saturday.
+saturdays :: DatePattern
+saturdays = filter (isDayOfWeek 6) days
 
 -- | Every Sunday.
 sundays :: DatePattern
