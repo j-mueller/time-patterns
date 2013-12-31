@@ -67,3 +67,8 @@ elementsFrom start sq = concat $ fmap elements $ occurrencesFrom start sq
 
 elements :: Enum a => Interval a -> [a]
 elements i = enumFromTo (inf i) (pred $ sup i)
+
+-- | Apply a function to the results of an interval sequence
+mapS :: (t -> t) -> IntervalSequence t -> IntervalSequence t
+mapS f IntervalSequence{..} = IntervalSequence nOcc' where
+	nOcc' d = nextInterval d >>= \r -> return (fmap f $ fst r, snd r)

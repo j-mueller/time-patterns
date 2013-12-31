@@ -20,16 +20,19 @@ module Data.Time.Patterns(
     fridays,
     saturdays,
     sundays,
+    weeks,
     -- * Operations on date patterns
     never,
     every,
+    shiftBy,
+    -- * Queries
     elementOf,
     instancesFrom
     ) where
 
 import Numeric.Interval
 import Control.Lens hiding (elementOf, elements)
-import Data.Thyme.Calendar (Day)
+import Data.Thyme.Calendar (Day, Days, modifiedJulianDay)
 import Data.Thyme.Calendar.WeekDate (mondayWeek, _mwDay)
 import Data.Time.Patterns.Internal hiding (elementOf, every)
 import qualified Data.Time.Patterns.Internal as I
@@ -67,6 +70,15 @@ saturdays = filter (isDayOfWeek 6) days
 -- | Every Sunday.
 sundays :: DatePattern
 sundays = filter (isDayOfWeek 7) days
+
+-- | Weeks, starting on mondays
+weeks :: DatePattern
+weeks = undefined
+
+-- | Shift all the results by a number of days
+shiftBy :: Days -> DatePattern -> DatePattern
+shiftBy n sq = mapS m sq where
+    m d = (d^.modifiedJulianDay + n)^.from modifiedJulianDay
 
 -- | Take every nth occurrence
 every :: Int -> DatePattern -> DatePattern
