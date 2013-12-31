@@ -22,6 +22,7 @@ module Data.Time.Intervals(
     cycle,
     elementOf,
     occurrencesFrom,
+    elementsFrom,
     -- * Date Patterns
     days,
     mondays,
@@ -58,7 +59,6 @@ toTimePattern dp = IntervalSequence ni where
     ni time = (ni' (day time)) >>= \r -> return (fmap dayToUtcTime $ fst r, toTimePattern $ snd r)
     day t = t ^. _utctDay
     ni' = nextInterval dp
-
 
 -- | Every monday.
 mondays :: DatePattern
@@ -107,6 +107,10 @@ occurrencesFrom :: t -> IntervalSequence t -> [Interval t]
 occurrencesFrom start IntervalSequence{..} = case (nextInterval start) of
     Nothing -> []
     Just (res, sq') -> res : occurrencesFrom (sup res) sq'
+
+-- | Elements covered by an interval sequence from an initial point.
+elementsFrom :: Enum t => t -> IntervalSequence t -> [t]
+elementsFrom start sq = concat $ fmap elements $ occurrencesFrom start sq
 
 -- TO DO: When easter can be implemented using the combinators, the library
 -- can be released.
