@@ -30,7 +30,7 @@ module Data.Time.Intervals(
     ) where
 
 import Numeric.Interval
-import Control.Lens hiding (elementOf)
+import Control.Lens hiding (elementOf, elements)
 import Data.AdditiveGroup
 import Data.Maybe (listToMaybe)
 import Data.Thyme.Calendar (Day)
@@ -60,10 +60,10 @@ toTimePattern dp = IntervalSequence ni where
 
 -- | Every monday.
 mondays :: DatePattern
-mondays = IntervalSequence{..} where
-    nextInterval dt = case (dt^. mondayWeek . _mwDay) of
-        1 -> Just (I dt (succ dt), mondays)  -- We have a Monday!
-        _ -> Nothing
+mondays = filter (isMonday) days where
+    isMonday i = case (elements i) of
+        [d] -> d^. mondayWeek . _mwDay == 1
+        _   -> False
 
 -- | A sequence with no occurrences
 never :: IntervalSequence t
@@ -116,3 +116,6 @@ dayToUtcTime :: Day -> UTCTime
 dayToUtcTime day = (UTCTime day midnight)^.from utcTime
     where
         midnight = zeroV
+
+elements :: Enum a -> Interval a -> [a]
+elements i = enumFromTo (inf i) (pred $ sup i)
