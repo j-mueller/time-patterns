@@ -25,6 +25,7 @@ module Data.Time.Intervals(
     -- * Date Patterns
     days,
     mondays,
+    sundays,
     -- * Conversions
     toTimePattern
     ) where
@@ -58,12 +59,14 @@ toTimePattern dp = IntervalSequence ni where
     day t = t ^. _utctDay
     ni' = nextInterval dp
 
+
 -- | Every monday.
 mondays :: DatePattern
-mondays = filter (isMonday) days where
-    isMonday i = case (elements i) of
-        [d] -> d^. mondayWeek . _mwDay == 1
-        _   -> False
+mondays = filter (isDayOfWeek 1) days
+
+-- | Every sunday.
+sundays :: DatePattern
+sundays = filter (isDayOfWeek 7) days
 
 -- | A sequence with no occurrences
 never :: IntervalSequence t
@@ -111,7 +114,6 @@ easter :: DatePattern
 easter = undefined
 
 -- Some helper functions
-
 dayToUtcTime :: Day -> UTCTime
 dayToUtcTime day = (UTCTime day midnight)^.from utcTime
     where
@@ -119,3 +121,10 @@ dayToUtcTime day = (UTCTime day midnight)^.from utcTime
 
 elements :: Enum a => Interval a -> [a]
 elements i = enumFromTo (inf i) (pred $ sup i)
+
+-- | Check if a day interval covers exactly a given weekday
+--   with Monday = 1, Tuesday = 2, etc.
+isDayOfWeek :: Int -> Interval Day -> Bool
+isDayOfWeek d i = case (elements i) of
+    [dt] -> dt^. mondayWeek . _mwDay == d
+    _   -> False
