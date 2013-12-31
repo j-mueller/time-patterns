@@ -16,6 +16,7 @@ module Data.Time.Intervals(
     -- * Operations on interval sequences
     never,
     every,
+    filter,
     intersect,
     minus, 
     cycle,
@@ -34,25 +35,16 @@ import Data.AdditiveGroup
 import Data.Maybe (listToMaybe)
 import Data.Thyme.Calendar (Day)
 import Data.Thyme.Clock (UTCTime, UTCView(..), _utctDay, utcTime)
-import Prelude hiding (cycle, elem)
+import Data.Thyme.Calendar.WeekDate (mondayWeek, _mwDay)
+import Prelude hiding (cycle, elem, filter)
 
--- if the argument to nextOccurrence is part of an interval, then the result should be the interval containing it.
+-- | If the argument to nextOccurrence is part of an interval, then the result should be the interval containing it.
 -- The interval should be closed at the first parameter and open at the second, so that repeated calls of
 -- nextOccurrence yield a sequence of occurrences.
 newtype IntervalSequence t = IntervalSequence { nextInterval :: t -> Maybe (Interval t, IntervalSequence t)}
-{-instance Functor IntervalSequence where
-    fmap f IntervalSequence{..} = IntervalSequence ni'
-        where
-            ni' = nextInterval . f >>= \(a, b) -> return (fmap f a, fmap f b)-}
--- instance Functor IntervalSequence
--- instance Foldable IntervalSequence
--- instance Traversable IntervalSequence
+
 type DatePattern = IntervalSequence Day
 type TimePattern = IntervalSequence UTCTime -- TimePattern should cycle throu
---type ZonedTimePattern = IntervalSequence ZonedTime
-
-
---toTimeZone :: TimeZone -> TimePattern -> ZonedTimePattern
 
 -- | An event that occurs every day.
 days :: DatePattern
@@ -66,8 +58,12 @@ toTimePattern dp = IntervalSequence ni where
     day t = t ^. _utctDay
     ni' = nextInterval dp
 
+-- | Every monday.
 mondays :: DatePattern
-mondays = undefined
+mondays = IntervalSequence{..} where
+    nextInterval dt = case (dt^. mondayWeek . _mwDay) of
+        1 -> Just (I dt (succ dt), mondays)  -- We have a Monday!
+        _ -> Nothing
 
 -- | A sequence with no occurrences
 never :: IntervalSequence t
@@ -80,6 +76,14 @@ every n sq
   | otherwise = IntervalSequence $ nextOcc n
       where
         nextOcc n' d = listToMaybe $ drop (n'-1) $ occurrencesFrom d sq >>= \s -> return (s, every n' sq)
+
+-- | Accept results which satisfy a condition
+filter :: (Interval t -> Bool) -> IntervalSequence t -> IntervalSequence t
+filter f IntervalSequence{..} = IntervalSequence nOcc' where
+    nOcc' t = nextInterval t >>= checkCondition
+    checkCondition (p,q) = case (f p) of
+        True -> Just (p, filter f q)
+        False -> nOcc' $ sup p
 
 intersect :: Num t => IntervalSequence t -> IntervalSequence t -> IntervalSequence t
 intersect = undefined
