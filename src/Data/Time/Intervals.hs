@@ -34,7 +34,6 @@ module Data.Time.Intervals(
 import Numeric.Interval
 import Control.Lens hiding (elementOf, elements)
 import Data.AdditiveGroup
-import Data.Maybe (listToMaybe)
 import Data.Thyme.Calendar (Day)
 import Data.Thyme.Clock (UTCTime, UTCView(..), _utctDay, utcTime)
 import Data.Thyme.Calendar.WeekDate (mondayWeek, _mwDay)
@@ -74,11 +73,13 @@ never = IntervalSequence $ const $ Nothing
 
 -- | Take every nth occurrence
 every :: Int -> IntervalSequence t -> IntervalSequence t
-every n sq 
+every n sq@IntervalSequence{..} 
   | n < 1 = never
-  | otherwise = IntervalSequence $ nextOcc n
+  | otherwise = IntervalSequence $ nextOcc 1
       where
-        nextOcc n' d = listToMaybe $ drop (n'-1) $ occurrencesFrom d sq >>= \s -> return (s, every n' sq)
+        nextOcc n'  d 
+            | n' == n = nextInterval d >>= \s -> return (fst s, every n sq)
+            | otherwise = nextInterval d >>= nextOcc (n' + 1) . sup . fst
 
 -- | Accept results which satisfy a condition
 filter :: (Interval t -> Bool) -> IntervalSequence t -> IntervalSequence t
