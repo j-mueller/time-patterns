@@ -6,108 +6,73 @@
 -- License     :  BSD3 (see the file LICENSE)
 -- Maintainer  :  j.mueller.11@ucl.ac.uk
 -- Stability   :  experimental
--- Primitives and combinators for describing dates that follow a pattern
--- such as yearly, monthly, and so on.
+-- Time intervals
 ----------------------------------------------------------------------------
 module Data.Time.Patterns(
-    -- * Date patterns
+    -- * Types
     DatePattern,
-    nextOccurrence,
-    occurrences,
-    -- * Primitives
-    leapYearly,
-    monthly,
+    -- * Date Patterns
+    days,
+    mondays,
+    tuesdays,
+    wednesdays,
+    sundays,
+    -- * Operations on date patterns
     never,
-    weekly,
-    yearly,
-    -- * Combinators
-    count,
     every,
-    after,
-    before
+    elementOf,
+    instancesFrom
     ) where
 
-import Control.Lens hiding (from, to)
-import qualified Control.Lens as L
-import Data.Thyme.Calendar (
-    YearMonthDay,
-    gregorian,
-    gregorianMonthsClip,
-    gregorianYearsClip,
-    isLeapYear,
-    _ymdYear)
+import Numeric.Interval
+import Control.Lens hiding (elementOf, elements)
+import Data.Thyme.Calendar (Day)
+import Data.Thyme.Calendar.WeekDate (mondayWeek, _mwDay)
+import Data.Time.Patterns.Internal hiding (elementOf, every)
+import qualified Data.Time.Patterns.Internal as I
+import Prelude hiding (cycle, elem, filter)
 
--- | A pattern describing re-occuring events. 
-newtype DatePattern = DatePattern { nOcc :: YearMonthDay -> Maybe (YearMonthDay, DatePattern) }
+-- | An event that occurs every day.
+days :: DatePattern
+days = IntervalSequence{..} where
+    nextInterval t = Just (I t (succ t), days)
 
--- | The next occurence after a date, or Nothing if no such
---   value exists.
-nextOccurrence :: DatePattern -> YearMonthDay -> Maybe YearMonthDay
-nextOccurrence DatePattern{..} d = nOcc d >>= return . fst
+-- | Every Monday.
+mondays :: DatePattern
+mondays = filter (isDayOfWeek 1) days
 
--- | A list of occurrences of the pattern after a start daye.
-occurrences :: DatePattern -> YearMonthDay -> [YearMonthDay]
-occurrences DatePattern{..} startDate = theList where
-    theList = case (nOcc startDate) of
-        Nothing -> []
-        Just (a, dp') -> a : occurrences dp' a
+-- | Every Tuesday.
+tuesdays :: DatePattern
+tuesdays = filter (isDayOfWeek 2) days
 
--- | A weekly event
-weekly :: DatePattern
-weekly = DatePattern{..} where
-  nOcc d = Just ((head . drop 7 . enumFrom $ d^.L.from gregorian)^.gregorian, weekly)
+-- | Every Wednesday.
+wednesdays :: DatePattern
+wednesdays = filter (isDayOfWeek 3) days
 
--- | A monthly event. 
-monthly :: DatePattern
-monthly = DatePattern{..} where
-  nOcc d = Just (gregorianMonthsClip 1 d, monthly)
+-- | Every Sunday.
+sundays :: DatePattern
+sundays = filter (isDayOfWeek 7) days
 
--- | A yearly event.
-yearly :: DatePattern
-yearly = DatePattern{..} where
-  nOcc d = Just (gregorianYearsClip 1 d, yearly)
-
--- | An event that occurs only in leap years.
-leapYearly :: DatePattern
-leapYearly = DatePattern $ \dt ->
-    let nextLeapYear = head . filter (\ty -> isLeapYear (ty^._ymdYear)) . zipWith (gregorianYearsClip) (enumFrom 1) . repeat in
-    Just (nextLeapYear dt, leapYearly)
-
--- | A pattern with no occurrences.
-never :: DatePattern
-never = DatePattern $ const $ Nothing
-
--- | Every n-th occurence of an event. If a number smaller than one
--- is given, getOccurence of the result will always return Nothing.
+-- | Take every nth occurrence
 every :: Int -> DatePattern -> DatePattern
-every n DatePattern{..} 
-  | n < 1 = never
-  | otherwise = DatePattern $ nextOcc n
-      where
-        nextOcc 1 d = nOcc d
-        nextOcc n' d = nOcc d >>= nextOcc (n'-1) . fst
+every = I.every
 
--- | Stop after a number of occurrences.
-count :: Int -> DatePattern -> DatePattern
-count n p@DatePattern{..}
-  | n < 1 = never
-  | otherwise = DatePattern $ \d -> 
-        let nd = nOcc d >>= return . fst in
-        let dp = count (n - 1) p in
-        nd >>= \d' -> return (d', dp)
+-- | Check if a date is covered by a DatePattern
+elementOf :: Day -> DatePattern -> Bool
+elementOf = I.elementOf
 
--- | Occurrences after a date (including the argument)
-after :: YearMonthDay -> DatePattern -> DatePattern
-after d dp = DatePattern occ'
-    where
-        occ' d'
-            | d <= d' = nOcc dp d'
-            | otherwise = nOcc dp d
+-- | Get occurrences of an event starting with a given day
+instancesFrom :: Day -> DatePattern -> [Day]
+instancesFrom = I.elementsFrom
 
--- | Occurrences before a date (including the argument)
-before :: YearMonthDay -> DatePattern -> DatePattern
-before d dp = DatePattern occ'
-    where
-        occ' d'
-            | d >= d' = nOcc dp d'
-            | otherwise = Nothing
+-- TO DO: When easter can be implemented using the combinators, the library
+-- can be released.
+easter :: DatePattern
+easter = undefined
+
+-- | Check if a day interval covers exactly a given weekday
+--   with Monday = 1, Tuesday = 2, etc.
+isDayOfWeek :: Int -> Interval Day -> Bool
+isDayOfWeek d i = case (elements i) of
+    [dt] -> dt^. mondayWeek . _mwDay == d
+    _   -> False
