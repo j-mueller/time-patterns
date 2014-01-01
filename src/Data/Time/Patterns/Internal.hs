@@ -13,7 +13,7 @@ module Data.Time.Patterns.Internal where
 import Numeric.Interval
 import Data.Thyme.Calendar (Day)
 import Data.Thyme.Clock (UTCTime)
-import Prelude hiding (cycle, elem, filter)
+import Prelude hiding (cycle, elem, filter, take)
 
 -- | If the argument to nextOccurrence is part of an interval, then the result should be the interval containing it.
 -- The interval should be closed at the first parameter and open at the second, so that repeated calls of
@@ -67,6 +67,23 @@ elementsFrom start sq = concat $ fmap elements $ occurrencesFrom start sq
 
 elements :: Enum a => Interval a -> [a]
 elements i = enumFromTo (inf i) (pred $ sup i)
+
+-- | End a sequence after n occurrences
+take :: Int -> IntervalSequence t -> IntervalSequence t
+take n IntervalSequence{..} 
+	| n < 1     = never
+	| otherwise = IntervalSequence $ \d -> 
+		nextInterval d >>= \r -> Just (fst r, take (pred n) $ snd r)
+
+-- | Skip the first n occurrences of a sequence
+skip :: Int -> IntervalSequence t -> IntervalSequence t
+skip n sq
+  | n < 1 = never
+  | otherwise = IntervalSequence $ nextOcc (nextInterval sq) n
+      where
+        nextOcc ni n' d 
+            | n' == 0 = ni d 
+            | otherwise = ni d >>= \(p, q) -> nextOcc (nextInterval q) (n' - 1) (sup p)
 
 -- | Apply a function to the results of an interval sequence
 mapS :: (t -> t) -> IntervalSequence t -> IntervalSequence t
