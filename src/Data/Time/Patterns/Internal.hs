@@ -71,9 +71,9 @@ elements i = enumFromTo (inf i) (pred $ sup i)
 -- | End a sequence after n occurrences
 take :: Int -> IntervalSequence t -> IntervalSequence t
 take n IntervalSequence{..} 
-	| n < 1     = never
-	| otherwise = IntervalSequence $ \d -> 
-		nextInterval d >>= \r -> Just (fst r, take (pred n) $ snd r)
+    | n < 1     = never
+    | otherwise = IntervalSequence $ \d -> 
+        nextInterval d >>= \r -> Just (fst r, take (pred n) $ snd r)
 
 -- | Skip the first n occurrences of a sequence
 skip :: Int -> IntervalSequence t -> IntervalSequence t
@@ -85,7 +85,19 @@ skip n sq
             | n' == 0 = ni d 
             | otherwise = ni d >>= \(p, q) -> nextOcc (nextInterval q) (n' - 1) (sup p)
 
+-- | Skip over a point in the sequence. All occurrences of this
+--   datum are removed.
+except :: (Enum t, Ord t) => t -> IntervalSequence t -> IntervalSequence t
+except p = except' (p ... succ p)
+
+-- | Skip over all intervals which contain the parameter
+except' ::Ord t => Interval t -> IntervalSequence t -> IntervalSequence t
+except' p IntervalSequence{..} = IntervalSequence ni' where
+    ni' d = nextInterval d >>= \(p', q) -> case (p' `contains` p) of
+        True -> ni' $ sup p
+        False -> return (p', except' p q) 
+
 -- | Apply a function to the results of an interval sequence
 mapS :: (t -> t) -> IntervalSequence t -> IntervalSequence t
 mapS f IntervalSequence{..} = IntervalSequence nOcc' where
-	nOcc' d = nextInterval d >>= \r -> return (fmap f $ fst r, snd r)
+    nOcc' d = nextInterval d >>= \r -> return (fmap f $ fst r, snd r)

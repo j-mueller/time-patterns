@@ -27,6 +27,7 @@ module Data.Time.Patterns(
     inEach,
     take,
     skip,
+    except,
     -- * Queries
     elementOf,
     instancesFrom
@@ -38,7 +39,7 @@ import Control.Monad (guard)
 import Data.Maybe (listToMaybe)
 import Data.Thyme.Calendar (Day, Days, YearMonthDay(..), gregorian, modifiedJulianDay, _ymdYear, _ymdMonth, _ymdDay)
 import Data.Thyme.Calendar.WeekDate (mondayWeek, _mwDay)
-import Data.Time.Patterns.Internal hiding (elementOf, every, never, take, skip)
+import Data.Time.Patterns.Internal hiding (elementOf, every, never, take, skip, except)
 import qualified Data.Time.Patterns.Internal as I
 import Prelude hiding (cycle, elem, filter, take)
 
@@ -98,7 +99,8 @@ inEach inner outer = IntervalSequence $ \d -> do
     (i1, _) <- nextInterval inner start
     innerStart <- listToMaybe $ elements o1
     guard (innerStart `elem` o1)
-    return (i1, inner `inEach` outer)
+    let inner' = except' i1 inner
+    return (i1, inner' `inEach` outer)
 
 -- | Shift all the results by a number of days
 shiftBy :: Days -> DatePattern -> DatePattern
@@ -119,6 +121,10 @@ take = I.take
 -- | Skip the first n occurrences
 skip :: Int -> DatePattern -> DatePattern
 skip = I.skip
+
+-- | Skip over all instance of a point
+except :: Day -> DatePattern -> DatePattern
+except = I.except
 
 -- | Check if a date is covered by a DatePattern
 elementOf :: Day -> DatePattern -> Bool
