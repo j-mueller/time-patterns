@@ -85,12 +85,12 @@ years :: DatePattern
 years = IntervalSequence $ \d -> let m = jan1 d in
     Just (I m $ addYears 1 m, years)
 
--- | e.g. the second monday in every year
--- take the result of the first pattern, 
--- (take 1 $ every 4 mondays) inEach years
--- 1. get the 'outer' interval from the 2nd 
--- argument
--- 2. apply to 1st argument
+-- | The first pattern repeated for each interval of the
+--   second pattern. E.g.:
+--   
+--   > (take 3 $ every 4 mondays) `inEach` years
+--
+--  will give the fourth, eighth and twelveth Monday in each year
 inEach :: DatePattern -> DatePattern -> DatePattern
 inEach i o = IntervalSequence (inEach' o (P.repeat i))
 
@@ -128,7 +128,10 @@ take = I.take
 skip :: Int -> DatePattern -> DatePattern
 skip = I.skip
 
--- | Skip over all instance of a point
+-- | Skip over all occurrences of a day.
+--   If the pattern describes a  period longer
+--   than a day, the entire period will be
+--   skipped.
 except :: Day -> DatePattern -> DatePattern
 except = I.except
 
