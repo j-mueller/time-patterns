@@ -34,14 +34,13 @@ module Data.Time.Patterns(
     ) where
 
 import Numeric.Interval
-import Control.Lens hiding (elementOf, elements)
-import Control.Monad (guard)
-import Data.Maybe (listToMaybe)
+import Control.Lens hiding (elementOf, elements, contains)
 import Data.Thyme.Calendar (Day, Days, YearMonthDay(..), gregorian, modifiedJulianDay, _ymdYear, _ymdMonth, _ymdDay)
 import Data.Thyme.Calendar.WeekDate (mondayWeek, _mwDay)
 import Data.Time.Patterns.Internal hiding (elementOf, every, never, take, skip, except)
 import qualified Data.Time.Patterns.Internal as I
 import Prelude hiding (cycle, elem, filter, take)
+import qualified Prelude as P
 
 -- | An event that occurs every day.
 days :: DatePattern
@@ -93,14 +92,21 @@ years = IntervalSequence $ \d -> let m = jan1 d in
 -- argument
 -- 2. apply to 1st argument
 inEach :: DatePattern -> DatePattern -> DatePattern
-inEach inner outer = IntervalSequence $ \d -> do
-    (o1, _) <- nextInterval outer d
-    start <- listToMaybe $ elements o1
-    (i1, _) <- nextInterval inner start
-    innerStart <- listToMaybe $ elements o1
-    guard (innerStart `elem` o1)
-    let inner' = except' i1 inner
-    return (i1, inner' `inEach` outer)
+inEach i o = IntervalSequence (inEach' o (P.repeat i))
+
+-- | like inEach, except that the ``inner`` DatePattern is replaced by a sequence of DatePatterns
+--   so that for every new outer interval, the next element from the sequence will be used.
+inEach' :: DatePattern -> [DatePattern] -> Day -> Maybe (Interval Day, DatePattern)
+inEach' _ [] _ = Nothing
+inEach' outer (inner:rest) d = do
+        (o1, outer') <- nextInterval outer d
+        let start  = inf o1
+        let inner' = stopAt o1 inner
+        case (nextInterval inner' start) of
+                Nothing        -> inEach' outer' rest $ sup o1
+                Just    (i1,inner'') -> case (o1 `contains` i1) of
+                    True -> return (i1, IntervalSequence $ inEach' outer (inner'':rest))
+                    False -> inEach' (except' o1 outer') (inner'':rest) $ sup i1
 
 -- | Shift all the results by a number of days
 shiftBy :: Days -> DatePattern -> DatePattern

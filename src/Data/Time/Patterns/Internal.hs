@@ -85,6 +85,27 @@ skip n sq
             | n' == 0 = ni d 
             | otherwise = ni d >>= \(p, q) -> nextOcc (nextInterval q) (n' - 1) (sup p)
 
+-- | Take occurrences until an interval is reached
+stopAt :: Ord t => Interval t -> IntervalSequence t -> IntervalSequence t
+stopAt p IntervalSequence{..} = IntervalSequence ni' where
+    ni' d = nextInterval d >>= \(p', q) -> case (p' `contains` p) of
+        True -> Nothing
+        False -> return (p', stopAt p q)
+
+-- | Stop as soon as a result greater than or equal to the parameter
+--   is produced
+before :: Ord t => Interval t -> IntervalSequence t -> IntervalSequence t
+before p IntervalSequence{..} = IntervalSequence ni' where
+    ni' d = nextInterval d >>= \(p', q) -> case (p >=! p') of
+        False -> Nothing
+        True  -> return (p', stopAt p q)
+
+skipUntil :: Ord t => Interval t -> IntervalSequence t -> IntervalSequence t
+skipUntil fr sq = IntervalSequence $ nextOcc $ nextInterval sq where
+    nextOcc ni d = ni d >>= \(p', q) -> case (fr <=! p') of
+        False -> nextOcc (nextInterval q) (sup p')
+        True  -> return (p', q)
+
 -- | Skip over a point in the sequence. All occurrences of this
 --   datum are removed.
 except :: (Enum t, Ord t) => t -> IntervalSequence t -> IntervalSequence t
@@ -94,8 +115,8 @@ except p = except' (p ... succ p)
 except' ::Ord t => Interval t -> IntervalSequence t -> IntervalSequence t
 except' p IntervalSequence{..} = IntervalSequence ni' where
     ni' d = nextInterval d >>= \(p', q) -> case (p' `contains` p) of
-        True -> ni' $ sup p
         False -> return (p', except' p q) 
+        True -> ni' $ sup p
 
 -- | Apply a function to the results of an interval sequence
 mapS :: (t -> t) -> IntervalSequence t -> IntervalSequence t
