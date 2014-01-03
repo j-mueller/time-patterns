@@ -18,7 +18,8 @@ module Data.Time.Patterns(
     fridays,
     saturdays,
     sundays,
-    weeks,
+    mondayWeeks,
+    sundayWeeks,
     years,
     -- * Operations on date patterns
     never,
@@ -36,7 +37,7 @@ module Data.Time.Patterns(
 import Numeric.Interval
 import Control.Lens hiding (elementOf, elements, contains)
 import Data.Thyme.Calendar (Day, Days, YearMonthDay(..), gregorian, modifiedJulianDay, _ymdYear, _ymdMonth, _ymdDay)
-import Data.Thyme.Calendar.WeekDate (mondayWeek, _mwDay)
+import Data.Thyme.Calendar.WeekDate (mondayWeek, sundayWeek, _mwDay, _swDay)
 import Data.Time.Patterns.Internal hiding (elementOf, every, never, take, skip, except)
 import qualified Data.Time.Patterns.Internal as I
 import Prelude hiding (cycle, elem, filter, take)
@@ -75,10 +76,15 @@ saturdays = filter (isDayOfWeek 6) days
 sundays :: DatePattern
 sundays = filter (isDayOfWeek 7) days
 
--- | Weeks, starting on mondays
-weeks :: DatePattern
-weeks = IntervalSequence $ \d -> let m = lastMonday d in 
-    Just (I m $ addDays 7 m, weeks)
+-- | Weeks, starting on Mondays
+mondayWeeks :: DatePattern
+mondayWeeks = IntervalSequence $ \d -> let m = lastMonday d in 
+    Just (I m $ addDays 7 m, mondayWeeks)
+
+-- | Weeks, starting on Sundays.
+sundayWeeks :: DatePattern
+sundayWeeks = IntervalSequence $ \d -> let m = lastSunday d in 
+    Just (I m $ addDays 7 m, sundayWeeks)
 
 -- | Years, starting from Jan. 1
 years :: DatePattern
@@ -160,6 +166,13 @@ lastMonday :: Day -> Day
 lastMonday d = case (d^.mondayWeek._mwDay) of
     1 -> d
     _ -> lastMonday $ pred d
+
+
+-- | Get the last Monday before or on the date
+lastSunday :: Day -> Day
+lastSunday d = case (d^.sundayWeek._swDay) of
+    1 -> d
+    _ -> lastSunday $ pred d
 
 -- | Get the beginning of a year
 jan1 :: Day -> Day
