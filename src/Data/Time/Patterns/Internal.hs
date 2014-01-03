@@ -92,6 +92,12 @@ stopAt p IntervalSequence{..} = IntervalSequence ni' where
         True -> Nothing
         False -> return (p', stopAt p q)
 
+stopAt' :: Ord t => t -> IntervalSequence t -> IntervalSequence t
+stopAt' p IntervalSequence{..} = IntervalSequence ni' where
+    ni' d = nextInterval d >>= \(p', q) -> case (sup p' >= p) of
+        True -> Nothing
+        False -> return (p', stopAt' p q)
+
 -- | Stop as soon as a result greater than or equal to the parameter
 --   is produced
 before :: Ord t => Interval t -> IntervalSequence t -> IntervalSequence t
@@ -122,3 +128,13 @@ except' p IntervalSequence{..} = IntervalSequence ni' where
 mapS :: (t -> t) -> IntervalSequence t -> IntervalSequence t
 mapS f IntervalSequence{..} = IntervalSequence nOcc' where
     nOcc' d = nextInterval d >>= \r -> return (fmap f $ fst r, snd r)
+
+firstOccurrenceIn :: (Enum t, Ord t) => t -> Interval t -> IntervalSequence t -> Maybe (Interval t, IntervalSequence t)
+firstOccurrenceIn s i IntervalSequence{..} = firstOcc s where
+    firstOcc start = do
+        (p, q) <- nextInterval start
+        case (i `contains` p) of
+            True -> return (p, q)
+            False -> case (sup p < sup i) of
+                True ->  firstOcc $ succ start
+                False -> Nothing

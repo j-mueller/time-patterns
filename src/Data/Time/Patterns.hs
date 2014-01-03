@@ -100,13 +100,10 @@ inEach' :: DatePattern -> [DatePattern] -> Day -> Maybe (Interval Day, DatePatte
 inEach' _ [] _ = Nothing
 inEach' outer (inner:rest) d = do
         (o1, outer') <- nextInterval outer d
-        let start  = inf o1
-        let inner' = stopAt o1 inner
-        case (nextInterval inner' start) of
-                Nothing        -> inEach' outer' rest $ sup o1
-                Just    (i1,inner'') -> case (o1 `contains` i1) of
-                    True -> return (i1, IntervalSequence $ inEach' outer (inner'':rest))
-                    False -> inEach' (except' o1 outer') (inner'':rest) $ sup i1
+        let inner' = stopAt' (sup o1) inner
+        case (firstOccurrenceIn d o1 inner') of
+                Nothing           -> inEach' outer' rest $ sup o1
+                Just (i1,inner'') -> return (i1, IntervalSequence $ inEach' outer (inner'':rest))
 
 -- | Shift all the results by a number of days
 shiftBy :: Days -> DatePattern -> DatePattern
