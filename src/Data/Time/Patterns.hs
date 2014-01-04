@@ -14,9 +14,14 @@
 -- > import Control.Lens
 -- > import Data.Thyme.Calendar
 -- > import qualified Prelude as P
--- > let april2 = (take 1 $ skip 1 day) `inEach` april
--- > let today = (YearMonthDay 2013 12 01)^.from gregorian
--- > P.take 10 $ instancesFrom today april2
+-- > Module Main where
+-- > 
+-- > main = do
+-- >   -- get the 6th of April for the next ten years
+-- >   let april6 = (take 1 $ shiftBy 5 day) `inEach` april
+-- >   let today = (YearMonthDay 2013 12 01)^.from gregorian
+-- >   print $ P.take 10 $ instancesFrom today april6
+-- >
 ----------------------------------------------------------------------------
 module Data.Time.Patterns(
     -- * Date Patterns

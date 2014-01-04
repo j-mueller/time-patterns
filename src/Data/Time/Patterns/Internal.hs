@@ -82,7 +82,7 @@ skip n sq
   | otherwise = IntervalSequence $ nextOcc (nextInterval sq) n
       where
         nextOcc ni n' d 
-            | n' == 0 = ni d 
+            | n' < 1 = ni d 
             | otherwise = ni d >>= \(p, q) -> nextOcc (nextInterval q) (n' - 1) (sup p)
 
 -- | Take occurrences until an interval is reached
@@ -136,7 +136,7 @@ firstOccurrenceIn s i IntervalSequence{..} = firstOcc s where
         case (i `contains` p) of
             True -> return (p, q)
             False -> case (sup p < sup i) of
-                True ->  firstOcc $ succ start
+                True ->  firstOcc $ sup p
                 False -> Nothing
 
 -- | Return intervals that are exactly the same

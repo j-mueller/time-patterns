@@ -1,8 +1,9 @@
 To do:
-- add week days 
-- split up into DayPattern, WeekPattern, YearPattern?
+- (take 1 $ skip 5 day) `inEach` april does not work -- it only skips 5 days the first time!
+
 
 Done:
 - change signature of nextOccurrence to Day -> Maybe (Day, DatePattern)
 - implement "count" combinator: count :: Int -> DatePattern -> DatePattern
 - use package thyme instead of time
+- add week days 
