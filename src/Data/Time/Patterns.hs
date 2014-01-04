@@ -6,7 +6,17 @@
 -- License     :  BSD3 (see the file LICENSE)
 -- Maintainer  :  j.mueller.11@ucl.ac.uk
 -- Stability   :  experimental
--- Date patterns.
+-- Patterns for re-occurring events. Use the @DatePattern@ type to build up
+-- a pattern, and the functions @elementOf@, @instancesFrom@ and 
+-- @intervalsFrom@ to evaluate it.
+-- Simple example:
+--
+-- > import Control.Lens
+-- > import Data.Thyme.Calendar
+-- > import qualified Prelude as P
+-- > let april2 = (take 1 $ skip 1 day) `inEach` april
+-- > let today = (YearMonthDay 2013 12 01)^.from gregorian
+-- > P.take 10 $ instancesFrom today april2
 ----------------------------------------------------------------------------
 module Data.Time.Patterns(
     -- * Date Patterns
@@ -47,7 +57,8 @@ module Data.Time.Patterns(
     intersect,
     -- * Queries
     elementOf,
-    instancesFrom
+    instancesFrom,
+    intervalsFrom
     ) where
 
 import Numeric.Interval
@@ -55,7 +66,7 @@ import Control.Lens hiding (elementOf, elements, contains)
 import Data.Thyme.Calendar (Day, Days, Months, YearMonthDay(..), gregorian, modifiedJulianDay, _ymdYear, _ymdMonth, _ymdDay)
 import Data.Thyme.Calendar.WeekDate (_mwDay, _swDay)
 import qualified Data.Thyme.Calendar.WeekDate as W
-import Data.Time.Patterns.Internal hiding (elementOf, every, never, take, skip, except, intersect)
+import Data.Time.Patterns.Internal hiding (elementOf, every, never, take, skip, except, intersect, occurrencesFrom)
 import qualified Data.Time.Patterns.Internal as I
 import Prelude hiding (cycle, elem, filter, take)
 import qualified Prelude as P
@@ -231,10 +242,16 @@ never = I.never
 intersect :: DatePattern -> DatePattern -> DatePattern
 intersect = I.intersect
 
--- TO DO: When easter can be implemented using the combinators, the library
--- can be released.
-easter :: DatePattern
-easter = undefined
+-- | Get the date intervals described by the pattern, starting
+--   from the specified date. 
+--   
+--   The intervals range from the first
+--   day included by the pattern to the first day after it, so
+--   a single day @d@ would be described as @(d ... succ d)@ and
+--   the interval for a month will go from the 1st of the month
+--   to the 1st of the next month.
+intervalsFrom :: Day -> DatePattern -> [Interval Day]
+intervalsFrom = I.occurrencesFrom
 
 -- | Check if a day interval covers exactly a given weekday
 --   with Monday = 1, Tuesday = 2, etc.

@@ -15,10 +15,11 @@ cabal-version:       >= 1.10
 description:         
   This package contains a set of primitives and combinators for event patterns. Example:
   .
-  > >> let biweekly = every 2 weekly
-  > >> let today = fromGregorian 2013 12 01
-  > >> nextOccurrence biweekly today
-  > Just 2013-12-15
+  > >> import qualified Prelude as P
+  > >> let sundays = every 2 sunday
+  > >> let today = (YearMonthDay 2013 12 01)^.from gregorian
+  > >> P.take 2 $ instancesFrom today sundays
+  > [2013-12-08, 2013-12-22]
 
 source-repository head
   type: git

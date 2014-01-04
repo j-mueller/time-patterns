@@ -78,7 +78,7 @@ take n IntervalSequence{..}
 -- | Skip the first n occurrences of a sequence
 skip :: Int -> IntervalSequence t -> IntervalSequence t
 skip n sq
-  | n < 1 = never
+  | n < 0 = never
   | otherwise = IntervalSequence $ nextOcc (nextInterval sq) n
       where
         nextOcc ni n' d 
