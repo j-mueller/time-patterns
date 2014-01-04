@@ -6,15 +6,15 @@
 -- License     :  BSD3 (see the file LICENSE)
 -- Maintainer  :  j.mueller.11@ucl.ac.uk
 -- Stability   :  experimental
--- Time intervals
+-- Date patterns.
 ----------------------------------------------------------------------------
 module Data.Time.Patterns(
     -- * Date Patterns
-    days,
-    mondayWeeks,
-    sundayWeeks,
-    months,
-    years,
+    day,
+    mondayWeek,
+    sundayWeek,
+    month,
+    year,
     -- ** Months
     january,
     february,
@@ -29,13 +29,13 @@ module Data.Time.Patterns(
     november,
     december,
     -- ** Days
-    mondays,
-    tuesdays,
-    wednesdays,
-    thursdays,
-    fridays,
-    saturdays,
-    sundays,
+    monday,
+    tuesday,
+    wednesday,
+    thursday,
+    friday,
+    saturday,
+    sunday,
     -- * Operations on date patterns
     never,
     every,
@@ -52,119 +52,120 @@ module Data.Time.Patterns(
 import Numeric.Interval
 import Control.Lens hiding (elementOf, elements, contains)
 import Data.Thyme.Calendar (Day, Days, Months, YearMonthDay(..), gregorian, modifiedJulianDay, _ymdYear, _ymdMonth, _ymdDay)
-import Data.Thyme.Calendar.WeekDate (mondayWeek, sundayWeek, _mwDay, _swDay)
+import Data.Thyme.Calendar.WeekDate (_mwDay, _swDay)
+import qualified Data.Thyme.Calendar.WeekDate as W
 import Data.Time.Patterns.Internal hiding (elementOf, every, never, take, skip, except)
 import qualified Data.Time.Patterns.Internal as I
 import Prelude hiding (cycle, elem, filter, take)
 import qualified Prelude as P
 
 -- | An event that occurs every month.
-months :: DatePattern
-months = IntervalSequence $ \t -> 
+month :: DatePattern
+month = IntervalSequence $ \t -> 
         let m = firstOfMonth t in
         let m' = addMonths 1 m in
-        Just (I m m', months) where
+        Just (I m m', month) where
         
 -- | Every January.
 january :: DatePattern
-january = filter (isMonthOfYear 1) months
+january = filter (isMonthOfYear 1) month
 
 -- | Every February.
 february :: DatePattern
-february = filter (isMonthOfYear 2) months
+february = filter (isMonthOfYear 2) month
 
 -- | Every March.
 march :: DatePattern
-march = filter (isMonthOfYear 3) months
+march = filter (isMonthOfYear 3) month
 
 -- | Every April.
 april :: DatePattern
-april = filter (isMonthOfYear 4) months
+april = filter (isMonthOfYear 4) month
 
 -- | Every May.
 may :: DatePattern
-may = filter (isMonthOfYear 5) months
+may = filter (isMonthOfYear 5) month
 
 -- | Every June.
 june :: DatePattern
-june = filter (isMonthOfYear 6) months
+june = filter (isMonthOfYear 6) month
 
 -- | Every July.
 july :: DatePattern
-july = filter (isMonthOfYear 7) months
+july = filter (isMonthOfYear 7) month
 
 -- | Every August.
 august :: DatePattern
-august = filter (isMonthOfYear 8) months
+august = filter (isMonthOfYear 8) month
 
 -- | Every September.
 september :: DatePattern
-september = filter (isMonthOfYear 9) months
+september = filter (isMonthOfYear 9) month
 
 -- | Every October.
 october :: DatePattern
-october = filter (isMonthOfYear 10) months
+october = filter (isMonthOfYear 10) month
 
 -- | Every November.
 november :: DatePattern
-november = filter (isMonthOfYear 11) months
+november = filter (isMonthOfYear 11) month
 
 -- | Every December.
 december :: DatePattern
-december = filter (isMonthOfYear 12) months
+december = filter (isMonthOfYear 12) month
 
 -- | An event that occurs every day.
-days :: DatePattern
-days = IntervalSequence{..} where
-    nextInterval t = Just (I t (succ t), days)
+day :: DatePattern
+day = IntervalSequence{..} where
+    nextInterval t = Just (I t (succ t), day)
 
 -- | Every Monday.
-mondays :: DatePattern
-mondays = filter (isDayOfWeek 1) days
+monday :: DatePattern
+monday = filter (isDayOfWeek 1) day
 
 -- | Every Tuesday.
-tuesdays :: DatePattern
-tuesdays = filter (isDayOfWeek 2) days
+tuesday :: DatePattern
+tuesday = filter (isDayOfWeek 2) day
 
 -- | Every Wednesday.
-wednesdays :: DatePattern
-wednesdays = filter (isDayOfWeek 3) days
+wednesday :: DatePattern
+wednesday = filter (isDayOfWeek 3) day
 
 -- | Every Thursday.
-thursdays :: DatePattern
-thursdays = filter (isDayOfWeek 4) days
+thursday :: DatePattern
+thursday = filter (isDayOfWeek 4) day
 
 -- | Every Friday.
-fridays :: DatePattern
-fridays = filter (isDayOfWeek 5) days
+friday :: DatePattern
+friday = filter (isDayOfWeek 5) day
 
 -- | Every Saturday.
-saturdays :: DatePattern
-saturdays = filter (isDayOfWeek 6) days
+saturday :: DatePattern
+saturday = filter (isDayOfWeek 6) day
 
 -- | Every Sunday.
-sundays :: DatePattern
-sundays = filter (isDayOfWeek 7) days
+sunday :: DatePattern
+sunday = filter (isDayOfWeek 7) day
 
--- | Weeks, starting on Mondays
-mondayWeeks :: DatePattern
-mondayWeeks = IntervalSequence $ \d -> let m = lastMonday d in 
-    Just (I m $ addDays 7 m, mondayWeeks)
+-- | Weeks, starting on Monday
+mondayWeek :: DatePattern
+mondayWeek = IntervalSequence $ \d -> let m = lastMonday d in 
+    Just (I m $ addDays 7 m, mondayWeek)
 
--- | Weeks, starting on Sundays.
-sundayWeeks :: DatePattern
-sundayWeeks = IntervalSequence $ \d -> let m = lastSunday d in 
-    Just (I m $ addDays 7 m, sundayWeeks)
+-- | Weeks, starting on Sunday.
+sundayWeek :: DatePattern
+sundayWeek = IntervalSequence $ \d -> let m = lastSunday d in 
+    Just (I m $ addDays 7 m, sundayWeek)
 
 -- | Years, starting from Jan. 1
-years :: DatePattern
-years = IntervalSequence $ \d -> let m = jan1 d in
-    Just (I m $ addYears 1 m, years)
+year :: DatePattern
+year = IntervalSequence $ \d -> let m = jan1 d in
+    Just (I m $ addYears 1 m, year)
 
 -- | The first pattern repeated for each interval of the
 --   second pattern. E.g.:
 --   
---   > (take 3 $ every 4 mondays) `inEach` years
+--   > (take 3 $ every 4 monday) `inEach` year
 --
 --  will give the fourth, eighth and twelveth Monday in each year
 inEach :: DatePattern -> DatePattern -> DatePattern
@@ -181,11 +182,11 @@ inEach' outer (inner:rest) d = do
                 Nothing           -> inEach' outer' rest $ sup o1
                 Just (i1,inner'') -> return (i1, IntervalSequence $ inEach' outer (inner'':rest))
 
--- | Shift all the results by a number of days
+-- | Shift all the results by a number of day
 shiftBy :: Days -> DatePattern -> DatePattern
 shiftBy n sq = mapS (addDays n) sq
 
--- | Add a number of days to a day
+-- | Add a number of day to a day
 addDays :: Days -> Day -> Day
 addDays n d = (d^.modifiedJulianDay + n)^.from modifiedJulianDay
 
@@ -228,7 +229,7 @@ easter = undefined
 --   with Monday = 1, Tuesday = 2, etc.
 isDayOfWeek :: Int -> Interval Day -> Bool
 isDayOfWeek d i = case (elements i) of
-    [dt] -> dt^. mondayWeek . _mwDay == d
+    [dt] -> dt^. W.mondayWeek . _mwDay == d
     _   -> False
 
 isMonthOfYear :: Int -> Interval Day -> Bool
@@ -238,14 +239,14 @@ isMonthOfYear m = all (isMonth' m) . elements
 
 -- | Get the last Monday before or on the date
 lastMonday :: Day -> Day
-lastMonday d = case (d^.mondayWeek._mwDay) of
+lastMonday d = case (d^.W.mondayWeek._mwDay) of
     1 -> d
     _ -> lastMonday $ pred d
 
 
 -- | Get the last Monday before or on the date
 lastSunday :: Day -> Day
-lastSunday d = case (d^.sundayWeek._swDay) of
+lastSunday d = case (d^.W.sundayWeek._swDay) of
     1 -> d
     _ -> lastSunday $ pred d
 
