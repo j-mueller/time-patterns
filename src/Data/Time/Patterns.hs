@@ -17,6 +17,17 @@ module Data.Time.Patterns(
     years,
     -- ** Months
     january,
+    february,
+    march,
+    april,
+    may,
+    june,
+    july,
+    august,
+    september,
+    october, 
+    november,
+    december,
     -- ** Days
     mondays,
     tuesdays,
@@ -49,15 +60,58 @@ import qualified Prelude as P
 
 -- | An event that occurs every month.
 months :: DatePattern
-months = IntervalSequence{..} where
-    nextInterval t = 
+months = IntervalSequence $ \t -> 
         let m = firstOfMonth t in
         let m' = addMonths 1 m in
         Just (I m m', months) where
         
 -- | Every January.
 january :: DatePattern
-january = undefined
+january = filter (isMonthOfYear 1) months
+
+-- | Every February.
+february :: DatePattern
+february = filter (isMonthOfYear 2) months
+
+-- | Every March.
+march :: DatePattern
+march = filter (isMonthOfYear 3) months
+
+-- | Every April.
+april :: DatePattern
+april = filter (isMonthOfYear 4) months
+
+-- | Every May.
+may :: DatePattern
+may = filter (isMonthOfYear 5) months
+
+-- | Every June.
+june :: DatePattern
+june = filter (isMonthOfYear 6) months
+
+-- | Every July.
+july :: DatePattern
+july = filter (isMonthOfYear 7) months
+
+-- | Every August.
+august :: DatePattern
+august = filter (isMonthOfYear 8) months
+
+-- | Every September.
+september :: DatePattern
+september = filter (isMonthOfYear 9) months
+
+-- | Every October.
+october :: DatePattern
+october = filter (isMonthOfYear 10) months
+
+-- | Every November.
+november :: DatePattern
+november = filter (isMonthOfYear 11) months
+
+-- | Every December.
+december :: DatePattern
+december = filter (isMonthOfYear 12) months
 
 -- | An event that occurs every day.
 days :: DatePattern
@@ -176,6 +230,11 @@ isDayOfWeek :: Int -> Interval Day -> Bool
 isDayOfWeek d i = case (elements i) of
     [dt] -> dt^. mondayWeek . _mwDay == d
     _   -> False
+
+isMonthOfYear :: Int -> Interval Day -> Bool
+isMonthOfYear m = all (isMonth' m) . elements 
+    where
+        isMonth' i d = d^.gregorian^._ymdMonth == i
 
 -- | Get the last Monday before or on the date
 lastMonday :: Day -> Day
