@@ -261,7 +261,8 @@ addYears n d = let d' = d^.gregorian in
 
 addMonths :: Months -> Day -> Day
 addMonths m d = let d' = d^.gregorian in 
-    (YearMonthDay (d'^._ymdYear) (d'^._ymdMonth + m) (d'^._ymdDay))^.from gregorian
+    let (years,months) = (d'^._ymdMonth + m) `divMod` 12 in
+    (YearMonthDay (d'^._ymdYear + years) months (d'^._ymdDay))^.from gregorian
 
 firstOfMonth :: Day -> Day
 firstOfMonth d = let d' = d^.gregorian in 
