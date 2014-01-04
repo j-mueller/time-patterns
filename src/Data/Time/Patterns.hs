@@ -11,6 +11,13 @@
 module Data.Time.Patterns(
     -- * Date Patterns
     days,
+    mondayWeeks,
+    sundayWeeks,
+    months,
+    years,
+    -- ** Months
+    january,
+    -- ** Days
     mondays,
     tuesdays,
     wednesdays,
@@ -18,9 +25,6 @@ module Data.Time.Patterns(
     fridays,
     saturdays,
     sundays,
-    mondayWeeks,
-    sundayWeeks,
-    years,
     -- * Operations on date patterns
     never,
     every,
@@ -36,12 +40,24 @@ module Data.Time.Patterns(
 
 import Numeric.Interval
 import Control.Lens hiding (elementOf, elements, contains)
-import Data.Thyme.Calendar (Day, Days, YearMonthDay(..), gregorian, modifiedJulianDay, _ymdYear, _ymdMonth, _ymdDay)
+import Data.Thyme.Calendar (Day, Days, Months, YearMonthDay(..), gregorian, modifiedJulianDay, _ymdYear, _ymdMonth, _ymdDay)
 import Data.Thyme.Calendar.WeekDate (mondayWeek, sundayWeek, _mwDay, _swDay)
 import Data.Time.Patterns.Internal hiding (elementOf, every, never, take, skip, except)
 import qualified Data.Time.Patterns.Internal as I
 import Prelude hiding (cycle, elem, filter, take)
 import qualified Prelude as P
+
+-- | An event that occurs every month.
+months :: DatePattern
+months = IntervalSequence{..} where
+    nextInterval t = 
+        let m = firstOfMonth t in
+        let m' = addMonths 1 m in
+        Just (I m m', months) where
+        
+-- | Every January.
+january :: DatePattern
+january = undefined
 
 -- | An event that occurs every day.
 days :: DatePattern
@@ -182,3 +198,11 @@ jan1 d = let d' = d^.gregorian in
 addYears :: Int -> Day -> Day
 addYears n d = let d' = d^.gregorian in 
     (YearMonthDay (d'^._ymdYear + n) (d'^._ymdMonth) (d'^._ymdDay))^.from gregorian
+
+addMonths :: Months -> Day -> Day
+addMonths m d = let d' = d^.gregorian in 
+    (YearMonthDay (d'^._ymdYear) (d'^._ymdMonth + m) (d'^._ymdDay))^.from gregorian
+
+firstOfMonth :: Day -> Day
+firstOfMonth d = let d' = d^.gregorian in 
+    (YearMonthDay (d'^._ymdYear) (d'^._ymdMonth) 1)^.from gregorian
