@@ -138,3 +138,20 @@ firstOccurrenceIn s i IntervalSequence{..} = firstOcc s where
             False -> case (sup p < sup i) of
                 True ->  firstOcc $ succ start
                 False -> Nothing
+
+-- | Return intervals that are exactly the same
+intersect :: (Ord t, Enum t) => IntervalSequence t -> IntervalSequence t -> IntervalSequence t
+intersect a b = IntervalSequence (nOcc' a) where
+    nOcc' a' d = do
+        (ia, sa) <- nextInterval a' d
+        (ib, sb) <- nextInterval b  $ inf ia
+        case ((sup ia == sup ib) && (inf ia == inf ib)) of
+            True -> return (ib, intersect sa sb)
+            False -> nOcc' sa $ sup ia
+
+-- | 
+diag :: IntervalSequence t -> IntervalSequence t -> IntervalSequence t
+diag a b = IntervalSequence (nOcc' a b) where
+    nOcc' a' b' d = do
+        (na, sa) <- nextInterval a' d
+        return (na, diag b' sa)
