@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                time-patterns
-version:             0.1.0.2
+version:             0.1.1.0
 synopsis:            Patterns of re-occurring events    
 license:             BSD3
 license-file:        LICENSE
@@ -23,7 +23,8 @@ description:
   > >> let today = (YearMonthDay 2013 12 01)^.from gregorian
   > >> P.take 2 $ instancesFrom today sundays
   > [2013-12-08, 2013-12-22]
-
+  .
+  See @Data.Time.Patterns@ for more examples.
 source-repository head
   type: git
   location: git@bitbucket.org:jfmueller/time-patterns.git
