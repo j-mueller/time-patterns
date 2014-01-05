@@ -22,7 +22,14 @@
 -- >   let april6 = (take 1 $ skip 5 day) `inEach` april
 -- >   let today = (YearMonthDay 2013 12 01)^.from gregorian
 -- >   print $ P.take 10 $ instancesFrom today april6
--- >
+-- 
+-- @DatePattern@s can be combined using @union@, @intersect@ with their 
+-- obvious meanings and @inEach@ which repeats one pattern inside another one.
+-- For example, 
+--
+-- > ((take 1 day) 'inEach' august) `intersect` sunday
+--
+-- will give the 1st of August in years when it falls on a Sunday.
 ----------------------------------------------------------------------------
 module Data.Time.Patterns(
     -- * Date Patterns
@@ -79,6 +86,7 @@ import qualified Data.Time.Patterns.Internal as I
 import Prelude hiding (cycle, elem, filter, take)
 import qualified Prelude as P
 
+-- | A DatePattern describes a sequence of intervals of type Data.Thyme.Day.
 type DatePattern = IntervalSequence Day
 
 -- | An event that occurs every month.
