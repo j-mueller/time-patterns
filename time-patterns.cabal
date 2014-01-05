@@ -8,10 +8,13 @@ license:             BSD3
 license-file:        LICENSE
 author:              Jann Müller
 maintainer:          j.mueller.11@ucl.ac.uk
-copyright:           Copyright (C) 2013 Jann F. Müller
+copyright:           Copyright (C) 2013 Jann Müller
 category:            Data, Time
 build-type:          Simple
 cabal-version:       >= 1.10
+homepage:            https://bitbucket.org/jfmueller/time-patterns
+bug-reports:         https://bitbucket.org/jfmueller/time-patterns/issues
+synopsis:            Patterns for re-occurring events.
 description:         
   This package contains a set of primitives and combinators for event patterns. Example:
   .
