@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                time-patterns
-version:             0.1.0.0
+version:             0.1.0.1
 synopsis:            Patterns of re-occurring events    
 license:             BSD3
 license-file:        LICENSE
