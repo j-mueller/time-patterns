@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                time-patterns
-version:             0.0.9.0
+version:             0.1.0.0
 synopsis:            Patterns of re-occurring events    
 license:             BSD3
 license-file:        LICENSE
@@ -27,6 +27,7 @@ source-repository head
 
 library
   exposed-modules:     Data.Time.Patterns
+  other-modules:       Data.Time.Patterns.Internal
   build-depends:       base >=4.6 && <4.7,
                        intervals == 0.4,
                        lens >= 3.9,
