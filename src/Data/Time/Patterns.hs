@@ -82,54 +82,54 @@ month = IntervalSequence $ \t ->
         let m = firstOfMonth t in
         let m' = addMonths 1 m in
         Just (I m m', month) where
-        
+
 -- | Every January.
 january :: DatePattern
-january = filter (isMonthOfYear 1) month
+january = monthOfYear 1
 
 -- | Every February.
 february :: DatePattern
-february = filter (isMonthOfYear 2) month
+february = monthOfYear 2
 
 -- | Every March.
 march :: DatePattern
-march = filter (isMonthOfYear 3) month
+march = monthOfYear 3
 
 -- | Every April.
 april :: DatePattern
-april = filter (isMonthOfYear 4) month
+april = monthOfYear 4
 
 -- | Every May.
 may :: DatePattern
-may = filter (isMonthOfYear 5) month
+may = monthOfYear 5
 
 -- | Every June.
 june :: DatePattern
-june = filter (isMonthOfYear 6) month
+june = monthOfYear 6
 
 -- | Every July.
 july :: DatePattern
-july = filter (isMonthOfYear 7) month
+july = monthOfYear 7
 
 -- | Every August.
 august :: DatePattern
-august = filter (isMonthOfYear 8) month
+august = monthOfYear 8
 
 -- | Every September.
 september :: DatePattern
-september = filter (isMonthOfYear 9) month
+september = monthOfYear 9
 
 -- | Every October.
 october :: DatePattern
-october = filter (isMonthOfYear 10) month
+october = monthOfYear 10
 
 -- | Every November.
 november :: DatePattern
-november = filter (isMonthOfYear 11) month
+november = monthOfYear 11
 
 -- | Every December.
 december :: DatePattern
-december = filter (isMonthOfYear 12) month
+december = monthOfYear 12
 
 -- | An event that occurs every day.
 day :: DatePattern
@@ -186,18 +186,17 @@ year = IntervalSequence $ \d -> let m = jan1 d in
 --
 --  will give the fourth, eighth and twelveth Monday in each year
 inEach :: DatePattern -> DatePattern -> DatePattern
-inEach i o = IntervalSequence (inEach' o (P.repeat i))
+inEach i o = IntervalSequence (inEach' o i i)
 
 -- | like inEach, except that the ``inner`` DatePattern is replaced by a sequence of DatePatterns
 --   so that for every new outer interval, the next element from the sequence will be used.
-inEach' :: DatePattern -> [DatePattern] -> Day -> Maybe (Interval Day, DatePattern)
-inEach' _ [] _ = Nothing
-inEach' outer (inner:rest) d = do
+inEach' :: DatePattern -> DatePattern -> DatePattern -> Day -> Maybe (Interval Day, DatePattern)
+inEach' outer inner orig d = do
         (o1, outer') <- nextInterval outer d
         let inner' = stopAt' (sup o1) inner
-        case (firstOccurrenceIn d o1 inner') of
-                Nothing           -> inEach' outer' rest $ sup o1
-                Just (i1,inner'') -> return (i1, IntervalSequence $ inEach' outer (inner'':rest))
+        case (firstOccurrenceIn (max d $ inf o1) o1 inner') of
+                Nothing           -> inEach' outer' orig orig $ sup o1
+                Just (i1,inner'') -> return (i1, IntervalSequence $ inEach' outer inner'' orig)
 
 -- | Shift all the results by a number of day
 shiftBy :: Days -> DatePattern -> DatePattern
@@ -265,11 +264,6 @@ isDayOfWeek d i = case (elements i) of
     [dt] -> dt^. W.mondayWeek . _mwDay == d
     _   -> False
 
-isMonthOfYear :: Int -> Interval Day -> Bool
-isMonthOfYear m = all (isMonth' m) . elements 
-    where
-        isMonth' i d = d^.gregorian^._ymdMonth == i
-
 -- | Get the last Monday before or on the date
 lastMonday :: Day -> Day
 lastMonday d = case (d^.W.mondayWeek._mwDay) of
@@ -300,3 +294,17 @@ addMonths m d = let d' = d^.gregorian in
 firstOfMonth :: Day -> Day
 firstOfMonth d = let d' = d^.gregorian in 
     (YearMonthDay (d'^._ymdYear) (d'^._ymdMonth) 1)^.from gregorian
+
+get1stOfMonth :: Int -> Day -> Day
+get1stOfMonth i d = 
+    let d' = d^.gregorian in 
+    let y = abs $ (i - d'^._ymdMonth) `div` 12 in
+    (YearMonthDay (d'^._ymdYear + y) i 1)^.from gregorian
+
+getMonth :: Int -> Day -> Interval Day
+getMonth i d = (d' ... addMonths 1 d')
+    where
+        d' = get1stOfMonth i d
+
+monthOfYear :: Int -> DatePattern
+monthOfYear i = IntervalSequence $ \d -> Just (getMonth i d, monthOfYear i)

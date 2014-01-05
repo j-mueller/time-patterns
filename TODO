@@ -1,5 +1,5 @@
 To do:
-- (take 1 $ skip 5 day) `inEach` april does not work -- it only skips 5 days the first time!
+- union
 
 
 Done:
@@ -7,3 +7,4 @@ Done:
 - implement "count" combinator: count :: Int -> DatePattern -> DatePattern
 - use package thyme instead of time
 - add week days 
+- (take 1 $ skip 5 day) `inEach` april does not work -- it only skips 5 days the first time!

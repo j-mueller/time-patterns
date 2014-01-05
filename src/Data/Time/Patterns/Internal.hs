@@ -149,7 +149,7 @@ intersect a b = IntervalSequence (nOcc' a b) where
             True -> return (ib, intersect sa sb)
             False -> nOcc' b' sa $ sup ia -- mix up a' and b' to search in both directions evenly
 
--- | 
+-- | Merge two sequences into one by switching between them
 diag :: IntervalSequence t -> IntervalSequence t -> IntervalSequence t
 diag a b = IntervalSequence (nOcc' a b) where
     nOcc' a' b' d = do
