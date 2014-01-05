@@ -26,6 +26,7 @@
 ----------------------------------------------------------------------------
 module Data.Time.Patterns(
     -- * Date Patterns
+    DatePattern,
     day,
     mondayWeek,
     sundayWeek,
@@ -77,6 +78,8 @@ import Data.Time.Patterns.Internal hiding (elementOf, every, never, take, skip, 
 import qualified Data.Time.Patterns.Internal as I
 import Prelude hiding (cycle, elem, filter, take)
 import qualified Prelude as P
+
+type DatePattern = IntervalSequence Day
 
 -- | An event that occurs every month.
 month :: DatePattern

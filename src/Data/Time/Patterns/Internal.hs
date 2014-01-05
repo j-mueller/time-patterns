@@ -11,7 +11,7 @@
 module Data.Time.Patterns.Internal where
 
 import Numeric.Interval
-import Data.Thyme.Calendar (Day)
+import Data.Monoid (Monoid(..))
 import Data.Thyme.Clock (UTCTime)
 import Prelude hiding (cycle, elem, filter, take)
 
@@ -20,9 +20,11 @@ import Prelude hiding (cycle, elem, filter, take)
 -- nextOccurrence yield a sequence of occurrences.
 newtype IntervalSequence t = IntervalSequence { nextInterval :: t -> Maybe (Interval t, IntervalSequence t)}
 
-type DatePattern = IntervalSequence Day
 type TimePattern = IntervalSequence UTCTime -- TimePattern should cycle throu
 
+instance (Ord t) => Monoid (IntervalSequence t) where
+    mappend = union
+    mempty  = never
 
 -- | A sequence with no occurrences
 never :: IntervalSequence t
