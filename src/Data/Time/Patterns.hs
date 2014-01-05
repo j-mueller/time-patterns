@@ -60,6 +60,7 @@ module Data.Time.Patterns(
     skip,
     except,
     intersect,
+    union,
     -- * Queries
     elementOf,
     instancesFrom,
@@ -71,7 +72,7 @@ import Control.Lens hiding (elementOf, elements, contains)
 import Data.Thyme.Calendar (Day, Days, Months, YearMonthDay(..), gregorian, modifiedJulianDay, _ymdYear, _ymdMonth, _ymdDay)
 import Data.Thyme.Calendar.WeekDate (_mwDay, _swDay)
 import qualified Data.Thyme.Calendar.WeekDate as W
-import Data.Time.Patterns.Internal hiding (elementOf, every, never, take, skip, except, intersect, occurrencesFrom)
+import Data.Time.Patterns.Internal hiding (elementOf, every, never, take, skip, except, intersect, occurrencesFrom, union)
 import qualified Data.Time.Patterns.Internal as I
 import Prelude hiding (cycle, elem, filter, take)
 import qualified Prelude as P
@@ -245,6 +246,20 @@ never = I.never
 -- Will return August 1 in years when it falls on a Sunday
 intersect :: DatePattern -> DatePattern -> DatePattern
 intersect = I.intersect
+
+-- | Occurrences of both patterns.
+--
+-- > union april june
+-- 
+-- Will return the months April and June in each year
+--
+-- > let fifteenth = (take 1 $ skip 14 day) `inEach` month
+-- > let third = (take 1 $ skip 2 day) `inEach` month
+-- > union fifteenth third
+--
+-- Will return the 3rd and the 15th of each month
+union :: DatePattern -> DatePattern -> DatePattern
+union = I.union
 
 -- | Get the date intervals described by the pattern, starting
 --   from the specified date. 

@@ -1,5 +1,5 @@
 To do:
-- union
+
 
 
 Done:
@@ -8,3 +8,4 @@ Done:
 - use package thyme instead of time
 - add week days 
 - (take 1 $ skip 5 day) `inEach` april does not work -- it only skips 5 days the first time!
+- union

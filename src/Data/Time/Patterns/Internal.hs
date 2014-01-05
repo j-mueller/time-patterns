@@ -155,3 +155,19 @@ diag a b = IntervalSequence (nOcc' a b) where
     nOcc' a' b' d = do
         (na, sa) <- nextInterval a' d
         return (na, diag b' sa)
+
+-- | Occurrences from both intervals.
+union :: Ord t => IntervalSequence t -> IntervalSequence t -> IntervalSequence t
+union a b = IntervalSequence $ \d ->
+    case (nextInterval a d, nextInterval b d) of
+        (Nothing, Nothing) -> Nothing
+        (Nothing, b')       -> b'
+        (a',       Nothing) -> a'
+        (Just (ia, sa), Just (ib, sb)) -> 
+            case (sup ia <= sup ib) of
+                True -> return (ia, union sa (ib `andThen` sb))
+                False -> return (ib, union (ia `andThen` sa) sb)
+
+-- | Prepend an interval to an interval sequence
+andThen :: Interval t -> IntervalSequence t -> IntervalSequence t
+andThen i sq = IntervalSequence $ \_ -> Just (i, sq)
