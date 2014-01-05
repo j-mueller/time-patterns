@@ -171,3 +171,4 @@ union a b = IntervalSequence $ \d ->
 -- | Prepend an interval to an interval sequence
 andThen :: Interval t -> IntervalSequence t -> IntervalSequence t
 andThen i sq = IntervalSequence $ \_ -> Just (i, sq)
+
