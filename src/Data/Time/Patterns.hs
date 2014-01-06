@@ -27,7 +27,7 @@
 -- obvious meanings and @inEach@ which repeats one pattern inside another one.
 -- For example, 
 --
--- > ((take 1 day) 'inEach' august) `intersect` sunday
+-- > ((take 1 day) `inEach` august) `intersect` sunday
 --
 -- will give the 1st of August in years when it falls on a Sunday.
 ----------------------------------------------------------------------------
