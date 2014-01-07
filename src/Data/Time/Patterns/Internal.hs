@@ -14,6 +14,7 @@ module Data.Time.Patterns.Internal where
 
 import Numeric.Interval
 import Data.Monoid (Monoid(..))
+import Data.Profunctor (Profunctor(..))
 import Prelude hiding (cycle, elem, filter, take)
 
 -- | If the argument to nextOccurrence is part of an interval, then the result should be the interval containing it.
@@ -23,9 +24,16 @@ newtype IntervalSequence t s = IntervalSequence { nextInterval :: t -> Maybe (In
 
 type IntervalSequence' t = IntervalSequence t t
 
-instance (Ord t) => Monoid (IntervalSequence' t) where
+instance (Ord s) => Monoid (IntervalSequence t s) where
     mappend = union
     mempty  = never
+
+instance Functor (IntervalSequence t) where
+    fmap f s = IntervalSequence $ \d -> nextInterval s d >>= \r -> return (fmap f $ fst r, fmap f $ snd r)
+
+instance Profunctor IntervalSequence where
+    rmap = fmap
+    lmap f s = IntervalSequence $ \d -> (nextInterval s $ f d) >>= \r -> return (fst r, lmap f $ snd r)
 
 -- | A sequence with no occurrences
 never :: IntervalSequence t s

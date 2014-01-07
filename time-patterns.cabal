@@ -35,6 +35,7 @@ library
   build-depends:       base >=4.6 && <4.7,
                        intervals == 0.4,
                        lens >= 3.9,
+                       profunctors >= 4,
                        thyme == 0.3.*,
                        vector-space == 0.8.6
   hs-source-dirs:      src
