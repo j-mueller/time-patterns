@@ -101,13 +101,15 @@ take n IntervalSequence{..}
 cycle :: Interval s -> IntervalSequence t s
 cycle i = IntervalSequence $ const $ Just (i, cycle i)
 
--- | Take occurrences until an interval is reached
+-- | Take occurrences until an interval containing the argument is reached
 stopAt :: Ord s => Interval s -> IntervalSequence t s -> IntervalSequence t s
 stopAt p IntervalSequence{..} = IntervalSequence ni' where
     ni' d = nextInterval d >>= \(p', q) -> case (p' `contains` p) of
         True -> Nothing
         False -> return (p', stopAt p q)
 
+-- | Take occurrences until an interval whose supremum is greater than the
+-- argument is reached.
 stopAt' :: Ord s => s -> IntervalSequence t s -> IntervalSequence t s
 stopAt' p IntervalSequence{..} = IntervalSequence ni' where
     ni' d = nextInterval d >>= \(p', q) -> case (sup p' >= p) of
