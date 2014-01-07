@@ -220,15 +220,15 @@ addDays :: Days -> Day -> Day
 addDays n d = (d^.modifiedJulianDay + n)^.from modifiedJulianDay
 
 -- | Take every nth occurrence
-every :: Int -> DatePattern -> DatePattern
+every :: (Num i, Ord i) => i -> DatePattern -> DatePattern
 every = I.every
 
 -- | Stop after n occurrences
-take :: Int -> DatePattern -> DatePattern
+take :: (Num i, Ord i) => i -> DatePattern -> DatePattern
 take = I.take
 
 -- | Skip the first n occurrences
-skip :: Int -> DatePattern -> DatePattern
+skip :: (Num i, Ord i) => i -> DatePattern -> DatePattern
 skip = I.skip
 
 -- | Skip over all occurrences of a day.

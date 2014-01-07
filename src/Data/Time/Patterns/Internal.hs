@@ -82,7 +82,6 @@ union a b = IntervalSequence $ \d ->
                 True -> return (ia, union sa (ib `andThen` sb))
                 False -> return (ib, union (ia `andThen` sa) sb)
 
-
 -- | Merge two sequences into one by switching between them
 diag :: IntervalSequence t s -> IntervalSequence t s -> IntervalSequence t s
 diag a b = IntervalSequence (nOcc' a b) where
@@ -91,11 +90,11 @@ diag a b = IntervalSequence (nOcc' a b) where
         return (na, diag b' sa)
 
 -- | End a sequence after n occurrences
-take :: Int -> IntervalSequence t s -> IntervalSequence t s
+take :: (Num i, Ord i) => i -> IntervalSequence t s -> IntervalSequence t s
 take n IntervalSequence{..} 
     | n < 1     = never
     | otherwise = IntervalSequence $ \d -> 
-        nextInterval d >>= \r -> Just (fst r, take (pred n) $ snd r)
+        nextInterval d >>= \r -> Just (fst r, take (n - 1) $ snd r)
 
 -- | Repeat a point infinitely
 cycle :: Interval s -> IntervalSequence t s
@@ -129,7 +128,7 @@ andThen :: Interval s -> IntervalSequence t s -> IntervalSequence t s
 andThen i sq = IntervalSequence $ \_ -> Just (i, sq)
 
 -- | Take every nth occurrence
-every :: Int -> IntervalSequence' t -> IntervalSequence' t
+every :: (Num i, Ord i) => i -> IntervalSequence' t -> IntervalSequence' t
 every n sq@IntervalSequence{..} 
   | n < 1 = never
   | otherwise = IntervalSequence $ nextOcc 1
@@ -161,7 +160,7 @@ elementsFrom :: Enum t => t -> IntervalSequence' t -> [t]
 elementsFrom start sq = concat $ fmap elements $ occurrencesFrom start sq
 
 -- | Skip the first n occurrences of a sequence
-skip :: Int -> IntervalSequence' t -> IntervalSequence' t
+skip :: (Num i, Ord i) => i -> IntervalSequence' t -> IntervalSequence' t
 skip n sq
   | n < 0 = never
   | otherwise = IntervalSequence $ nextOcc (nextInterval sq) n
