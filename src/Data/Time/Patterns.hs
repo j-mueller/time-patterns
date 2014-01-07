@@ -87,7 +87,7 @@ import Prelude hiding (cycle, elem, filter, take)
 import qualified Prelude as P
 
 -- | A DatePattern describes a sequence of intervals of type Data.Thyme.Day.
-type DatePattern = IntervalSequence Day
+type DatePattern = IntervalSequence' Day
 
 -- | An event that occurs every month.
 month :: DatePattern
