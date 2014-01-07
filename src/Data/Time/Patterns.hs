@@ -6,7 +6,7 @@
 -- License     :  BSD3 (see the file LICENSE)
 -- Maintainer  :  j.mueller.11@ucl.ac.uk
 -- Stability   :  experimental
--- Patterns for re-occurring events. Use the @DatePattern@ type to build up
+-- Patterns for recurring events. Use the @DatePattern@ type to build up
 -- a pattern, and the functions @elementOf@, @instancesFrom@ and 
 -- @intervalsFrom@ to evaluate it.
 -- Simple example:

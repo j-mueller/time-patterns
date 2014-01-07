@@ -3,7 +3,7 @@
 
 name:                time-patterns
 version:             0.1.1.0
-synopsis:            Patterns of re-occurring events    
+synopsis:            Patterns of reccurring events    
 license:             BSD3
 license-file:        LICENSE
 author:              Jann Müller
@@ -14,7 +14,7 @@ build-type:          Simple
 cabal-version:       >= 1.10
 homepage:            https://bitbucket.org/jfmueller/time-patterns
 bug-reports:         https://bitbucket.org/jfmueller/time-patterns/issues
-synopsis:            Patterns for re-occurring events.
+synopsis:            Patterns for reccurring events.
 description:         
   This package contains a set of primitives and combinators for event patterns. Example:
   .
