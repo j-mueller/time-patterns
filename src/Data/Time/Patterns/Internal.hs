@@ -135,11 +135,6 @@ except' p IntervalSequence{..} = IntervalSequence ni' where
         False -> return (p', except' p q) 
         True -> ni' $ sup p
 
--- | Apply a function to the results of an interval sequence
-mapS :: (s -> s) -> IntervalSequence t s -> IntervalSequence t s
-mapS f IntervalSequence{..} = IntervalSequence nOcc' where
-    nOcc' d = nextInterval d >>= \r -> return (fmap f $ fst r, snd r)
-
 firstOccurrenceIn :: (Enum t, Ord t) => t -> Interval t -> IntervalSequence' t -> Maybe (Interval t, IntervalSequence' t)
 firstOccurrenceIn s i IntervalSequence{..} = firstOcc s where
     firstOcc start = do

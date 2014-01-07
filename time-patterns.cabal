@@ -30,8 +30,8 @@ source-repository head
   location: git@bitbucket.org:jfmueller/time-patterns.git
 
 library
-  exposed-modules:     Data.Time.Patterns
-  other-modules:       Data.Time.Patterns.Internal
+  exposed-modules:     Data.Time.Patterns,
+                       Data.Time.Patterns.Internal
   build-depends:       base >=4.6 && <4.7,
                        intervals == 0.4,
                        lens >= 3.9,

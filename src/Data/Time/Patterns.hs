@@ -213,7 +213,7 @@ inEach' outer inner orig d = do
 
 -- | Shift all the results by a number of day
 shiftBy :: Days -> DatePattern -> DatePattern
-shiftBy n sq = mapS (addDays n) sq
+shiftBy n = fmap (addDays n)
 
 -- | Add a number of day to a day
 addDays :: Days -> Day -> Day
