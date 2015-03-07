@@ -77,14 +77,13 @@ module Data.Time.Patterns(
     ) where
 
 import Numeric.Interval
-import Control.Lens hiding (elementOf, elements, contains)
+import Control.Lens hiding (elementOf, elements, contains, (...))
 import Data.Thyme.Calendar (Day, Days, Months, YearMonthDay(..), gregorian, modifiedJulianDay, _ymdYear, _ymdMonth, _ymdDay)
 import Data.Thyme.Calendar.WeekDate (_mwDay, _swDay)
 import qualified Data.Thyme.Calendar.WeekDate as W
 import Data.Time.Patterns.Internal hiding (elementOf, every, never, take, skip, except, intersect, occurrencesFrom, union)
 import qualified Data.Time.Patterns.Internal as I
 import Prelude hiding (cycle, elem, filter, take)
-import qualified Prelude as P
 
 -- | A DatePattern describes a sequence of intervals of type Data.Thyme.Day.
 type DatePattern = IntervalSequence' Day
@@ -94,7 +93,7 @@ month :: DatePattern
 month = IntervalSequence $ \t -> 
         let m = firstOfMonth t in
         let m' = addMonths 1 m in
-        Just (I m m', month) where
+        Just (m ... m', month) where
 
 -- | Every January.
 january :: DatePattern
@@ -147,7 +146,7 @@ december = monthOfYear 12
 -- | An event that occurs every day.
 day :: DatePattern
 day = IntervalSequence{..} where
-    nextInterval t = Just (I t (succ t), day)
+    nextInterval t = Just (t ... (succ t), day)
 
 -- | Every Monday.
 monday :: DatePattern
@@ -180,17 +179,17 @@ sunday = filter (isDayOfWeek 7) day
 -- | Weeks, starting on Monday
 mondayWeek :: DatePattern
 mondayWeek = IntervalSequence $ \d -> let m = lastMonday d in 
-    Just (I m $ addDays 7 m, mondayWeek)
+    Just (m ... addDays 7 m, mondayWeek)
 
 -- | Weeks, starting on Sunday.
 sundayWeek :: DatePattern
 sundayWeek = IntervalSequence $ \d -> let m = lastSunday d in 
-    Just (I m $ addDays 7 m, sundayWeek)
+    Just (m ... addDays 7 m, sundayWeek)
 
 -- | Years, starting from Jan. 1
 year :: DatePattern
 year = IntervalSequence $ \d -> let m = jan1 d in
-    Just (I m $ addYears 1 m, year)
+    Just (m ... addYears 1 m, year)
 
 -- | The first pattern repeated for each interval of the
 --   second pattern. E.g.:
@@ -213,7 +212,7 @@ inEach' outer inner orig d = do
 
 -- | Shift all the results by a number of day
 shiftBy :: Days -> DatePattern -> DatePattern
-shiftBy n = fmap (addDays n)
+shiftBy n = mapSequence (addDays n)
 
 -- | Add a number of day to a day
 addDays :: Days -> Day -> Day

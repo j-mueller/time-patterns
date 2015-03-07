@@ -30,6 +30,7 @@ module Data.Time.Patterns.Internal(
     elementOf,
     occurrencesFrom,
     elementsFrom,
+    mapSequence,
     skip,
     skipUntil,
     except,
@@ -41,8 +42,8 @@ module Data.Time.Patterns.Internal(
     ) where
 
 import Numeric.Interval
+import Numeric.Interval.Internal
 import Data.Monoid (Monoid(..))
-import Data.Profunctor (Profunctor(..))
 import Prelude hiding (cycle, elem, filter, take)
 
 -- | A sequence of intervals, starting from a point.
@@ -57,12 +58,15 @@ instance (Ord s) => Monoid (IntervalSequence t s) where
     mappend = union
     mempty  = never
 
-instance Functor (IntervalSequence t) where
-    fmap f s = IntervalSequence $ \d -> nextInterval s d >>= \r -> return (fmap f $ fst r, fmap f $ snd r)
 
-instance Profunctor IntervalSequence where
-    rmap = fmap
-    lmap f s = IntervalSequence $ \d -> (nextInterval s $ f d) >>= \r -> return (fst r, lmap f $ snd r)
+mapSequence :: (a -> b) -> IntervalSequence t a -> IntervalSequence t b
+mapSequence f s =
+  IntervalSequence (\t ->
+                      nextInterval s t >>= \t' ->
+                                             return (mapInterval f (fst t'),
+                                                     mapSequence f (snd t')))
+  where mapInterval f' (I a b) = I (f' a) (f' b)
+        mapInterval _ Empty = Empty
 
 -- | A sequence with no occurrences
 never :: IntervalSequence t s
