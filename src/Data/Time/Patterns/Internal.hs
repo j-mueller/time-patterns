@@ -1,6 +1,6 @@
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE RankNTypes        #-}
+{-# LANGUAGE RecordWildCards   #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Data.Time.Patterns.Internal
@@ -41,13 +41,13 @@ module Data.Time.Patterns.Internal(
     elements
     ) where
 
-import Numeric.Interval
-import Numeric.Interval.Internal
-import Data.Monoid (Monoid(..))
-import Prelude hiding (cycle, elem, filter, take)
+import           Data.Monoid               (Monoid (..))
+import           Numeric.Interval
+import           Numeric.Interval.Internal
+import           Prelude                   hiding (cycle, elem, filter, take)
 
 -- | A sequence of intervals, starting from a point.
--- If the argument to @nextInterval@ is part of an interval, then the result 
+-- If the argument to @nextInterval@ is part of an interval, then the result
 -- should be the interval containing it.
 newtype IntervalSequence t s = IntervalSequence { nextInterval :: t -> Maybe (Interval s, IntervalSequence t s)}
 
@@ -72,7 +72,7 @@ mapSequence f s =
 never :: IntervalSequence t s
 never = IntervalSequence $ const $ Nothing
 
--- | Occurrences from both intervals. 
+-- | Occurrences from both intervals.
 --   The difference between @union@ and @diag@ is that @union@ preserves
 --   the order of the results
 union :: Ord s => IntervalSequence t s -> IntervalSequence t s -> IntervalSequence t s
@@ -81,7 +81,7 @@ union a b = IntervalSequence $ \d ->
         (Nothing, Nothing) -> Nothing
         (Nothing, b')       -> b'
         (a',       Nothing) -> a'
-        (Just (ia, sa), Just (ib, sb)) -> 
+        (Just (ia, sa), Just (ib, sb)) ->
             case (sup ia <= sup ib) of
                 True -> return (ia, union sa (ib `andThen` sb))
                 False -> return (ib, union (ia `andThen` sa) sb)
@@ -95,9 +95,9 @@ diag a b = IntervalSequence (nOcc' a b) where
 
 -- | End a sequence after n occurrences
 take :: (Num i, Ord i) => i -> IntervalSequence t s -> IntervalSequence t s
-take n IntervalSequence{..} 
+take n IntervalSequence{..}
     | n < 1     = never
-    | otherwise = IntervalSequence $ \d -> 
+    | otherwise = IntervalSequence $ \d ->
         nextInterval d >>= \r -> Just (fst r, take (n - 1) $ snd r)
 
 -- | Repeat a point infinitely
@@ -133,11 +133,11 @@ andThen i sq = IntervalSequence $ \_ -> Just (i, sq)
 
 -- | Take every nth occurrence
 every :: (Num i, Ord i) => i -> IntervalSequence' t -> IntervalSequence' t
-every n sq@IntervalSequence{..} 
+every n sq@IntervalSequence{..}
   | n < 1 = never
   | otherwise = IntervalSequence $ nextOcc 1
       where
-        nextOcc n'  d 
+        nextOcc n'  d
             | n' == n = nextInterval d >>= \s -> return (fst s, every n sq)
             | otherwise = nextInterval d >>= nextOcc (n' + 1) . sup . fst
 
@@ -169,8 +169,8 @@ skip n sq
   | n < 0 = never
   | otherwise = IntervalSequence $ nextOcc (nextInterval sq) n
       where
-        nextOcc ni n' d 
-            | n' < 1 = ni d 
+        nextOcc ni n' d
+            | n' < 1 = ni d
             | otherwise = ni d >>= \(p, q) -> nextOcc (nextInterval q) (n' - 1) (sup p)
 
 -- | Skip intervals until the infimum of the argument is reached.
@@ -189,11 +189,11 @@ except p = except' (p ... succ p)
 except' :: Ord t => Interval t -> IntervalSequence' t -> IntervalSequence' t
 except' p IntervalSequence{..} = IntervalSequence ni' where
     ni' d = nextInterval d >>= \(p', q) -> case (p' `contains` p) of
-        False -> return (p', except' p q) 
+        False -> return (p', except' p q)
         True -> ni' $ sup p
 
 -- | Search for the first result within the specified interval, starting from
--- a point. 
+-- a point.
 --
 -- If the intervals in the sequence are not ordered, then this function might
 -- not terminate.

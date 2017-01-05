@@ -2,13 +2,13 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                time-patterns
-version:             0.1.3.1
+version:             0.1.3.2
 synopsis:            Patterns for recurring events
 license:             BSD3
 license-file:        LICENSE
 author:              Jann Müller, Moritz Kiefer
 maintainer:          j.mueller.11@ucl.ac.uk
-copyright:           Copyright (C) 2013-2015 Jann Müller, (C) 2015 Moritz Kiefer
+copyright:           Copyright (C) 2013-2016 Jann Müller, (C) 2015 Moritz Kiefer
 category:            Data, Time
 build-type:          Simple
 cabal-version:       >= 1.10
@@ -27,14 +27,14 @@ description:
   See @Data.Time.Patterns@ for more examples.
 source-repository head
   type: git
-  location: git@bitbucket.org:jfmueller/time-patterns.git
+  location: git@github.com:j-mueller/time-patterns.git
 
 library
   exposed-modules:     Data.Time.Patterns,
                        Data.Time.Patterns.Internal
-  build-depends:       base >=4.6 && <4.8,
+  build-depends:       base >=4.6 && <5,
                        intervals >= 0.7 && <0.8,
-                       lens >= 3.9 && <4.8,
+                       lens >= 4 && <5,
                        thyme >= 0.3 && <0.4,
                        vector-space >= 0.9 && <1.0
   hs-source-dirs:      src

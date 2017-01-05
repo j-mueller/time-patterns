@@ -7,7 +7,7 @@
 -- Maintainer  :  j.mueller.11@ucl.ac.uk
 -- Stability   :  experimental
 -- Patterns for recurring events. Use the @DatePattern@ type to build up
--- a pattern, and the functions @elementOf@, @instancesFrom@ and 
+-- a pattern, and the functions @elementOf@, @instancesFrom@ and
 -- @intervalsFrom@ to evaluate it.
 -- Simple example:
 --
@@ -16,16 +16,16 @@
 -- > import Data.Time.Patterns
 -- > import qualified Prelude as P
 -- > Module Main where
--- > 
+-- >
 -- > main = do
 -- >   -- get the 6th of April for the next ten years
 -- >   let april6 = (take 1 $ skip 5 day) `inEach` april
 -- >   let today = (YearMonthDay 2013 12 01)^.from gregorian
 -- >   print $ P.take 10 $ instancesFrom today april6
--- 
--- @DatePattern@s can be combined using @union@, @intersect@ with their 
+--
+-- @DatePattern@s can be combined using @union@, @intersect@ with their
 -- obvious meanings and @inEach@ which repeats one pattern inside another one.
--- For example, 
+-- For example,
 --
 -- > ((take 1 day) `inEach` august) `intersect` sunday
 --
@@ -49,7 +49,7 @@ module Data.Time.Patterns(
     july,
     august,
     september,
-    october, 
+    october,
     november,
     december,
     -- ** Days
@@ -76,21 +76,28 @@ module Data.Time.Patterns(
     intervalsFrom
     ) where
 
-import Numeric.Interval
-import Control.Lens hiding (elementOf, elements, contains, (...))
-import Data.Thyme.Calendar (Day, Days, Months, YearMonthDay(..), gregorian, modifiedJulianDay, _ymdYear, _ymdMonth, _ymdDay)
-import Data.Thyme.Calendar.WeekDate (_mwDay, _swDay)
+import           Control.Lens                 hiding (contains, elementOf,
+                                               elements, (...))
+import           Data.Thyme.Calendar          (Day, Days, Months,
+                                               YearMonthDay (..), gregorian,
+                                               modifiedJulianDay, _ymdDay,
+                                               _ymdMonth, _ymdYear)
+import           Data.Thyme.Calendar.WeekDate (_mwDay, _swDay)
 import qualified Data.Thyme.Calendar.WeekDate as W
-import Data.Time.Patterns.Internal hiding (elementOf, every, never, take, skip, except, intersect, occurrencesFrom, union)
-import qualified Data.Time.Patterns.Internal as I
-import Prelude hiding (cycle, elem, filter, take)
+import           Data.Time.Patterns.Internal  hiding (elementOf, every, except,
+                                               intersect, never,
+                                               occurrencesFrom, skip, take,
+                                               union)
+import qualified Data.Time.Patterns.Internal  as I
+import           Numeric.Interval
+import           Prelude                      hiding (cycle, elem, filter, take)
 
 -- | A DatePattern describes a sequence of intervals of type Data.Thyme.Day.
 type DatePattern = IntervalSequence' Day
 
 -- | An event that occurs every month.
 month :: DatePattern
-month = IntervalSequence $ \t -> 
+month = IntervalSequence $ \t ->
         let m = firstOfMonth t in
         let m' = addMonths 1 m in
         Just (m ... m', month) where
@@ -178,12 +185,12 @@ sunday = filter (isDayOfWeek 7) day
 
 -- | Weeks, starting on Monday
 mondayWeek :: DatePattern
-mondayWeek = IntervalSequence $ \d -> let m = lastMonday d in 
+mondayWeek = IntervalSequence $ \d -> let m = lastMonday d in
     Just (m ... addDays 7 m, mondayWeek)
 
 -- | Weeks, starting on Sunday.
 sundayWeek :: DatePattern
-sundayWeek = IntervalSequence $ \d -> let m = lastSunday d in 
+sundayWeek = IntervalSequence $ \d -> let m = lastSunday d in
     Just (m ... addDays 7 m, sundayWeek)
 
 -- | Years, starting from Jan. 1
@@ -193,7 +200,7 @@ year = IntervalSequence $ \d -> let m = jan1 d in
 
 -- | The first pattern repeated for each interval of the
 --   second pattern. E.g.:
---   
+--
 --   > (take 3 $ every 4 monday) `inEach` year
 --
 --  will give the fourth, eighth and twelveth Monday in each year
@@ -261,7 +268,7 @@ intersect = I.intersect
 -- | Occurrences of both patterns.
 --
 -- > union april june
--- 
+--
 -- Will return the months April and June in each year
 --
 -- > let fifteenth = (take 1 $ skip 14 day) `inEach` month
@@ -273,8 +280,8 @@ union :: DatePattern -> DatePattern -> DatePattern
 union = I.union
 
 -- | Get the date intervals described by the pattern, starting
---   from the specified date. 
---   
+--   from the specified date.
+--
 --   The intervals range from the first
 --   day included by the pattern to the first day after it, so
 --   a single day @d@ would be described as @(d ... succ d)@ and
@@ -305,25 +312,25 @@ lastSunday d = case (d^.W.sundayWeek._swDay) of
 
 -- | Get the beginning of a year
 jan1 :: Day -> Day
-jan1 d = let d' = d^.gregorian in 
+jan1 d = let d' = d^.gregorian in
     (YearMonthDay (d'^._ymdYear) 1 1)^.from gregorian
 
 addYears :: Int -> Day -> Day
-addYears n d = let d' = d^.gregorian in 
+addYears n d = let d' = d^.gregorian in
     (YearMonthDay (d'^._ymdYear + n) (d'^._ymdMonth) (d'^._ymdDay))^.from gregorian
 
 addMonths :: Months -> Day -> Day
-addMonths m d = let d' = d^.gregorian in 
+addMonths m d = let d' = d^.gregorian in
     let (years,months) = (d'^._ymdMonth + m) `divMod` 12 in
     (YearMonthDay (d'^._ymdYear + years) months (d'^._ymdDay))^.from gregorian
 
 firstOfMonth :: Day -> Day
-firstOfMonth d = let d' = d^.gregorian in 
+firstOfMonth d = let d' = d^.gregorian in
     (YearMonthDay (d'^._ymdYear) (d'^._ymdMonth) 1)^.from gregorian
 
 get1stOfMonth :: Int -> Day -> Day
-get1stOfMonth i d = 
-    let d' = d^.gregorian in 
+get1stOfMonth i d =
+    let d' = d^.gregorian in
     let y = abs $ (i - d'^._ymdMonth) `div` 12 in
     (YearMonthDay (d'^._ymdYear + y) i 1)^.from gregorian
 
