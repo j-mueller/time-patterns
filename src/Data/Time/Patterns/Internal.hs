@@ -4,7 +4,7 @@
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Data.Time.Patterns.Internal
--- Copyright   :  (C) 2013 Jann Mueller
+-- Copyright   :  (C) 2013-2017 Jann Müller
 -- License     :  BSD3 (see the file LICENSE)
 -- Maintainer  :  j.mueller.11@ucl.ac.uk
 -- Stability   :  experimental

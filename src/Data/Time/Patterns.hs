@@ -2,7 +2,7 @@
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Data.Time.Patterns
--- Copyright   :  (C) 2013 Jann Mueller
+-- Copyright   :  (C) 2013-2017 Jann Müller
 -- License     :  BSD3 (see the file LICENSE)
 -- Maintainer  :  j.mueller.11@ucl.ac.uk
 -- Stability   :  experimental
@@ -12,7 +12,7 @@
 -- Simple example:
 --
 -- > import Control.Lens
--- > import Data.Thyme.Calendar
+-- > import Data.Time.Calendar (fromGregorian)
 -- > import Data.Time.Patterns
 -- > import qualified Prelude as P
 -- > Module Main where
@@ -20,7 +20,7 @@
 -- > main = do
 -- >   -- get the 6th of April for the next ten years
 -- >   let april6 = (take 1 $ skip 5 day) `inEach` april
--- >   let today = (YearMonthDay 2013 12 01)^.from gregorian
+-- >   let today =  fromGregorian 2013 12 01
 -- >   print $ P.take 10 $ instancesFrom today april6
 --
 -- @DatePattern@s can be combined using @union@, @intersect@ with their
@@ -76,21 +76,19 @@ module Data.Time.Patterns(
     intervalsFrom
     ) where
 
-import           Control.Lens                 hiding (contains, elementOf,
-                                               elements, (...))
-import           Data.Thyme.Calendar          (Day, Days, Months,
-                                               YearMonthDay (..), gregorian,
-                                               modifiedJulianDay, _ymdDay,
-                                               _ymdMonth, _ymdYear)
-import           Data.Thyme.Calendar.WeekDate (_mwDay, _swDay)
-import qualified Data.Thyme.Calendar.WeekDate as W
-import           Data.Time.Patterns.Internal  hiding (elementOf, every, except,
-                                               intersect, never,
-                                               occurrencesFrom, skip, take,
-                                               union)
-import qualified Data.Time.Patterns.Internal  as I
+import           Data.Time.Calendar             (Day, addDays, fromGregorian,
+                                                 toGregorian)
+import           Data.Time.Calendar.OrdinalDate (mondayStartWeek,
+                                                 sundayStartWeek)
+import qualified Data.Time.Calendar.WeekDate    as W
+import           Data.Time.Patterns.Internal    hiding (elementOf, every,
+                                                 except, intersect, never,
+                                                 occurrencesFrom, skip, take,
+                                                 union)
+import qualified Data.Time.Patterns.Internal    as I
 import           Numeric.Interval
-import           Prelude                      hiding (cycle, elem, filter, take)
+import           Prelude                        hiding (cycle, elem, filter,
+                                                 take)
 
 -- | A DatePattern describes a sequence of intervals of type Data.Thyme.Day.
 type DatePattern = IntervalSequence' Day
@@ -218,12 +216,8 @@ inEach' outer inner orig d = do
                 Just (i1,inner'') -> return (i1, IntervalSequence $ inEach' outer inner'' orig)
 
 -- | Shift all the results by a number of day
-shiftBy :: Days -> DatePattern -> DatePattern
+shiftBy :: Integer -> DatePattern -> DatePattern
 shiftBy n = mapSequence (addDays n)
-
--- | Add a number of day to a day
-addDays :: Days -> Day -> Day
-addDays n d = (d^.modifiedJulianDay + n)^.from modifiedJulianDay
 
 -- | Take every nth occurrence
 every :: (Num i, Ord i) => i -> DatePattern -> DatePattern
@@ -294,45 +288,49 @@ intervalsFrom = I.occurrencesFrom
 --   with Monday = 1, Tuesday = 2, etc.
 isDayOfWeek :: Int -> Interval Day -> Bool
 isDayOfWeek d i = case (elements i) of
-    [dt] -> dt^. W.mondayWeek . _mwDay == d
+    [dt] -> let (_, dayOfWeek) = mondayStartWeek dt in dayOfWeek == d
     _   -> False
 
 -- | Get the last Monday before or on the date
 lastMonday :: Day -> Day
-lastMonday d = case (d^.W.mondayWeek._mwDay) of
+lastMonday d = let (_, dayOfWeek) = mondayStartWeek d in
+    case dayOfWeek of
     1 -> d
     _ -> lastMonday $ pred d
 
 
--- | Get the last Monday before or on the date
+-- | Get the last Sunday before or on the date
 lastSunday :: Day -> Day
-lastSunday d = case (d^.W.sundayWeek._swDay) of
+lastSunday d = let (_, dayOfWeek) = sundayStartWeek d in
+    case dayOfWeek of
     1 -> d
     _ -> lastSunday $ pred d
 
 -- | Get the beginning of a year
 jan1 :: Day -> Day
-jan1 d = let d' = d^.gregorian in
-    (YearMonthDay (d'^._ymdYear) 1 1)^.from gregorian
+jan1 d = let (year, _, _) = toGregorian d in
+    fromGregorian year 1 1
 
-addYears :: Int -> Day -> Day
-addYears n d = let d' = d^.gregorian in
-    (YearMonthDay (d'^._ymdYear + n) (d'^._ymdMonth) (d'^._ymdDay))^.from gregorian
+addYears :: Integer -> Day -> Day
+addYears n d = let (year, month, day) = toGregorian d in
+    fromGregorian (year + n) month day
 
-addMonths :: Months -> Day -> Day
-addMonths m d = let d' = d^.gregorian in
-    let (years,months) = (d'^._ymdMonth + m) `divMod` 12 in
-    (YearMonthDay (d'^._ymdYear + years) months (d'^._ymdDay))^.from gregorian
+addMonths :: Int -> Day -> Day
+addMonths m d =
+    let (year, month, day) = toGregorian d in
+    let (years,months) = (month + m) `divMod` 12 in
+    fromGregorian (year + fromIntegral years) (months) day
 
 firstOfMonth :: Day -> Day
-firstOfMonth d = let d' = d^.gregorian in
-    (YearMonthDay (d'^._ymdYear) (d'^._ymdMonth) 1)^.from gregorian
+firstOfMonth d =
+    let (year, month, _) = toGregorian d in
+    fromGregorian year month 1
 
 get1stOfMonth :: Int -> Day -> Day
 get1stOfMonth i d =
-    let d' = d^.gregorian in
-    let y = abs $ (i - d'^._ymdMonth) `div` 12 in
-    (YearMonthDay (d'^._ymdYear + y) i 1)^.from gregorian
+    let (year, month, day) = toGregorian d in
+    let y = abs $ (i - month) `div` 12 in
+    fromGregorian (year + fromIntegral y) i 1
 
 getMonth :: Int -> Day -> Interval Day
 getMonth i d = (d' ... addMonths 1 d')
