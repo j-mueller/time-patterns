@@ -2,7 +2,7 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                time-patterns
-version:             0.1.4.0
+version:             0.1.4.1
 synopsis:            Patterns for recurring events
 license:             BSD3
 license-file:        LICENSE
@@ -34,6 +34,6 @@ library
                        Data.Time.Patterns.Internal
   build-depends:       base >=4.6 && <5,
                        intervals >= 0.7 && <0.8,
-                       time >= 1.6 && < 1.8
+                       time >= 1.4 && < 1.8
   hs-source-dirs:      src
   default-language:    Haskell2010
