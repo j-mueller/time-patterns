@@ -70,6 +70,7 @@ module Data.Time.Patterns(
     except,
     intersect,
     union,
+    until,
     -- * Queries
     elementOf,
     instancesFrom,
@@ -88,9 +89,10 @@ import           Data.Time.Patterns.Internal    hiding (elementOf, every,
 import qualified Data.Time.Patterns.Internal    as I
 import           Numeric.Interval
 import           Prelude                        hiding (cycle, elem, filter,
-                                                 take)
+                                                 take, until)
 
--- | A DatePattern describes a sequence of intervals of type Data.Thyme.Day.
+-- | A `DatePattern` describes a sequence of intervals of type 
+-- `Data.Time.Calendar.Day`.
 type DatePattern = IntervalSequence' Day
 
 -- | An event that occurs every month.
@@ -339,3 +341,12 @@ getMonth i d = (d' ... addMonths 1 d')
 
 monthOfYear :: Int -> DatePattern
 monthOfYear i = IntervalSequence $ \d -> Just (getMonth i d, monthOfYear i)
+
+-- | Only include date intervals that end before the given date.
+-- 
+-- > >> let third = (take 1 $ skip 2 day) `inEach` month
+-- > >> let pattern = third `until` (fromGregorian 2020 12 01)
+-- > >> instancesFrom (fromGregorian 2017 01 01) pattern
+-- > [2017-01-03,2017-02-03 ... 2020-10-03,2020-11-03]
+until :: DatePattern -> Day -> DatePattern
+until = flip I.stopAt'
