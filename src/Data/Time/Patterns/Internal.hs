@@ -44,7 +44,7 @@ module Data.Time.Patterns.Internal(
 import           Data.Monoid               (Monoid (..))
 import           Numeric.Interval
 import           Numeric.Interval.Internal
-import           Prelude                   hiding (cycle, elem, filter, take)
+import           Prelude                   hiding (cycle, filter, take)
 
 -- | A sequence of intervals, starting from a point.
 -- If the argument to @nextInterval@ is part of an interval, then the result
@@ -54,10 +54,12 @@ newtype IntervalSequence t s = IntervalSequence { nextInterval :: t -> Maybe (In
 -- | IntervalSequences that can be evaluated repeatedly.
 type IntervalSequence' t = IntervalSequence t t
 
-instance (Ord s) => Monoid (IntervalSequence t s) where
-    mappend = union
-    mempty  = never
+instance Ord s => Semigroup (IntervalSequence t s) where
+    (<>) = union
 
+instance (Ord s) => Monoid (IntervalSequence t s) where
+    mappend = (<>)
+    mempty  = never
 
 mapSequence :: (a -> b) -> IntervalSequence t a -> IntervalSequence t b
 mapSequence f s =
@@ -66,7 +68,7 @@ mapSequence f s =
                                              return (mapInterval f (fst t'),
                                                      mapSequence f (snd t')))
   where mapInterval f' (I a b) = I (f' a) (f' b)
-        mapInterval _ Empty = Empty
+        mapInterval _ Empty    = Empty
 
 -- | A sequence with no occurrences
 never :: IntervalSequence t s
@@ -83,7 +85,7 @@ union a b = IntervalSequence $ \d ->
         (a',       Nothing) -> a'
         (Just (ia, sa), Just (ib, sb)) ->
             case (sup ia <= sup ib) of
-                True -> return (ia, union sa (ib `andThen` sb))
+                True  -> return (ia, union sa (ib `andThen` sb))
                 False -> return (ib, union (ia `andThen` sa) sb)
 
 -- | Merge two sequences into one by switching between them
@@ -108,7 +110,7 @@ cycle i = IntervalSequence $ const $ Just (i, cycle i)
 stopAt :: Ord s => Interval s -> IntervalSequence t s -> IntervalSequence t s
 stopAt p IntervalSequence{..} = IntervalSequence ni' where
     ni' d = nextInterval d >>= \(p', q) -> case (p' `contains` p) of
-        True -> Nothing
+        True  -> Nothing
         False -> return (p', stopAt p q)
 
 -- | Take occurrences until an interval whose supremum is greater than the
@@ -116,7 +118,7 @@ stopAt p IntervalSequence{..} = IntervalSequence ni' where
 stopAt' :: Ord s => s -> IntervalSequence t s -> IntervalSequence t s
 stopAt' p IntervalSequence{..} = IntervalSequence ni' where
     ni' d = nextInterval d >>= \(p', q) -> case (sup p' >= p) of
-        True -> Nothing
+        True  -> Nothing
         False -> return (p', stopAt' p q)
 
 -- | Stop as soon as a result greater than or equal to the parameter
@@ -146,17 +148,17 @@ filter :: (Interval t -> Bool) -> IntervalSequence' t -> IntervalSequence' t
 filter f IntervalSequence{..} = IntervalSequence nOcc' where
     nOcc' t = nextInterval t >>= checkCondition
     checkCondition (p,q) = case (f p) of
-        True -> Just (p, filter f q)
+        True  -> Just (p, filter f q)
         False -> nOcc' $ sup p
 
 -- | Check if a point is covered by an interval sequence
 elementOf :: Ord t => t -> IntervalSequence' t -> Bool
-elementOf t IntervalSequence{..} = maybe False (\(p,_) -> (elem t p) && (<) t (sup p)) (nextInterval t)
+elementOf t IntervalSequence{..} = maybe False (\(p,_) -> (member t p) && (<) t (sup p)) (nextInterval t)
 
 -- | The sequence of occurrences from an initial point.
 occurrencesFrom :: t -> IntervalSequence' t -> [Interval t]
 occurrencesFrom start IntervalSequence{..} = case (nextInterval start) of
-    Nothing -> []
+    Nothing         -> []
     Just (res, sq') -> res : occurrencesFrom (sup res) sq'
 
 -- | Elements covered by an interval sequence from an initial point.
@@ -190,7 +192,7 @@ except' :: Ord t => Interval t -> IntervalSequence' t -> IntervalSequence' t
 except' p IntervalSequence{..} = IntervalSequence ni' where
     ni' d = nextInterval d >>= \(p', q) -> case (p' `contains` p) of
         False -> return (p', except' p q)
-        True -> ni' $ sup p
+        True  -> ni' $ sup p
 
 -- | Search for the first result within the specified interval, starting from
 -- a point.
@@ -204,7 +206,7 @@ firstOccurrenceIn s i IntervalSequence{..} = firstOcc s where
         case (i `contains` p) of
             True -> return (p, q)
             False -> case (sup p < sup i) of
-                True ->  firstOcc $ sup p
+                True  ->  firstOcc $ sup p
                 False -> Nothing
 
 -- | Return intervals that are exactly the same
@@ -214,7 +216,7 @@ intersect a b = IntervalSequence (nOcc' a b) where
         (ia, sa) <- nextInterval a' d
         (ib, sb) <- nextInterval b'  $ inf ia
         case ((sup ia == sup ib) && (inf ia == inf ib)) of
-            True -> return (ib, intersect sa sb)
+            True  -> return (ib, intersect sa sb)
             False -> nOcc' b' sa $ sup ia -- mix up a' and b' to search in both directions evenly
 
 elements :: Enum a => Interval a -> [a]

@@ -2,19 +2,18 @@
 -- documentation, see http://haskell.org/cabal/users-guide/
 
 name:                time-patterns
-version:             0.1.4.2
+version:             0.1.4.3
 synopsis:            Patterns for recurring events
 license:             BSD3
 license-file:        LICENSE
 author:              Jann Müller, Moritz Kiefer
 maintainer:          j.mueller.11@ucl.ac.uk
-copyright:           Copyright (C) 2013-2017 Jann Müller, (C) 2015 Moritz Kiefer
+copyright:           Copyright (C) 2013-2018 Jann Müller, (C) 2015 Moritz Kiefer
 category:            Data, Time
 build-type:          Simple
 cabal-version:       >= 1.10
 homepage:            https://github.com/j-mueller/time-patterns
 bug-reports:         https://github.com/j-mueller/time-patterns/issues
-synopsis:            Patterns for recurring events.
 description:
   This package contains a set of primitives and combinators for event patterns. Example:
   .
@@ -33,7 +32,7 @@ library
   exposed-modules:     Data.Time.Patterns,
                        Data.Time.Patterns.Internal
   build-depends:       base >=4.6 && <5,
-                       intervals >= 0.7 && <0.8,
-                       time >= 1.4 && < 1.8
+                       intervals >= 0.7,
+                       time >= 1.4
   hs-source-dirs:      src
   default-language:    Haskell2010
